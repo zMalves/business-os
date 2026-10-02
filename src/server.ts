@@ -19,6 +19,7 @@ import { googleRoutes } from './routes/google.routes.js';
 import { cronRoutes } from './routes/cron.routes.js';
 import { skillRoutes } from './routes/skill.routes.js';
 import { metaRoutes } from './routes/meta.routes.js';
+import { ecommerceRoutes } from './routes/ecommerce.routes.js';
 import { loggerService } from './services/logger.service.js';
 import { cronService } from './services/cron.service.js';
 import { authService } from './services/auth.service.js';
@@ -208,6 +209,7 @@ async function main() {
   await app.register(cronRoutes, { prefix: '/api' });
   await app.register(skillRoutes, { prefix: '/api' });
   await app.register(metaRoutes, { prefix: '/api' });
+  await app.register(ecommerceRoutes, { prefix: '/api' });
 
   // Servidor de arquivos estáticos nativo com proteção de autenticação no Painel
   const candidatePaths = [

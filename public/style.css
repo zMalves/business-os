@@ -2770,3 +2770,416 @@ input:checked + .slider:before {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================================
+   BUSINESS OS — EXECUTIVE WORKSPACE STYLES (CYPRUS & SAND)
+   ============================================================================ */
+
+.dashboard-hero-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 22px 26px;
+  background: var(--color-surface-pure);
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+.dashboard-quick-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Bento KPI Grid */
+.bento-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.bento-card {
+  background: var(--color-surface-pure);
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+}
+
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-cyprus);
+}
+
+.bento-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bento-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-slate);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bento-main-metric {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--color-cyprus);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 4px 0;
+}
+
+.bento-sub-metric {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+/* Bento Modules */
+.bento-module-card {
+  background: var(--color-surface-pure);
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-xs);
+}
+
+.bento-module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-sand-border-soft);
+}
+
+/* E-Commerce Cards */
+.ecom-store-card {
+  background: var(--color-surface-pure);
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ecom-consolidated {
+  background: linear-gradient(135deg, var(--color-surface-pure) 0%, var(--color-sand-light) 100%);
+  border-color: var(--color-cyprus);
+  border-width: 1.5px;
+}
+
+.ecom-card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin-bottom: 12px;
+}
+
+.ecom-card-revenue {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-cyprus);
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+
+.ecom-card-meta {
+  display: flex;
+  gap: 14px;
+  font-size: 0.8rem;
+  color: var(--color-slate);
+  font-weight: 500;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-cyprus {
+  background: var(--color-cyprus-subtle);
+  color: var(--color-cyprus);
+  border: 1px solid rgba(0, 70, 67, 0.2);
+}
+
+.badge-mint {
+  background: rgba(46, 196, 182, 0.15);
+  color: #0d8277;
+  border: 1px solid rgba(46, 196, 182, 0.3);
+}
+
+.badge-amber {
+  background: rgba(224, 159, 62, 0.15);
+  color: #a06714;
+  border: 1px solid rgba(224, 159, 62, 0.3);
+}
+
+.badge-coral {
+  background: rgba(231, 111, 81, 0.15);
+  color: #c14425;
+  border: 1px solid rgba(231, 111, 81, 0.3);
+}
+
+/* Topbar Pill Button */
+.topbar-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-cyprus);
+  color: var(--color-sand);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 7px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 70, 67, 0.2);
+}
+
+.topbar-pill-btn:hover {
+  background: var(--color-cyprus-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 70, 67, 0.3);
+}
+
+/* Global Copilot Drawer */
+.copilot-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 27, 26, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+}
+
+.copilot-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.copilot-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 440px;
+  max-width: 100vw;
+  background: var(--color-sand);
+  border-left: 1px solid var(--color-sand-border);
+  box-shadow: var(--shadow-modal);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.copilot-drawer.active {
+  transform: translateX(0);
+}
+
+.copilot-drawer-header {
+  padding: 16px 20px;
+  background: var(--color-surface-pure);
+  border-bottom: 1px solid var(--color-sand-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.copilot-drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copilot-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-cyprus);
+  color: var(--color-mint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0, 70, 67, 0.25);
+}
+
+.pulse-dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-mint);
+  display: inline-block;
+  box-shadow: 0 0 6px var(--color-mint);
+}
+
+.copilot-quick-pills {
+  padding: 10px 16px;
+  background: var(--color-sand-light);
+  border-bottom: 1px solid var(--color-sand-border-soft);
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.copilot-pill {
+  background: var(--color-surface-pure);
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-full);
+  padding: 4px 11px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.copilot-pill:hover {
+  background: var(--color-cyprus);
+  color: var(--color-sand);
+  border-color: var(--color-cyprus);
+}
+
+.copilot-drawer-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.copilot-bubble {
+  max-width: 88%;
+  padding: 12px 15px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.copilot-assistant {
+  background: var(--color-surface-pure);
+  border: 1px solid var(--color-sand-border);
+  color: var(--color-ink);
+  align-self: flex-start;
+  box-shadow: var(--shadow-xs);
+}
+
+.copilot-user {
+  background: var(--color-cyprus);
+  color: var(--color-sand);
+  align-self: flex-end;
+  box-shadow: var(--shadow-sm);
+}
+
+.copilot-drawer-footer {
+  padding: 14px 18px;
+  background: var(--color-surface-pure);
+  border-top: 1px solid var(--color-sand-border);
+  flex-shrink: 0;
+}
+
+.copilot-form {
+  display: flex;
+  gap: 8px;
+}
+
+.copilot-form input {
+  flex: 1;
+  background: var(--color-sand-light);
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-full);
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.copilot-form input:focus {
+  border-color: var(--color-cyprus);
+  box-shadow: 0 0 0 3px rgba(0, 70, 67, 0.12);
+}
+
+.btn-copilot-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-cyprus);
+  color: var(--color-sand);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-copilot-send:hover {
+  background: var(--color-cyprus-deep);
+  transform: scale(1.05);
+}
+
+/* Floating Action Button */
+.copilot-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--color-cyprus);
+  color: var(--color-sand);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 12px 22px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 70, 67, 0.28);
+  cursor: pointer;
+  z-index: 990;
+  transition: all var(--transition-fast);
+}
+
+.copilot-fab:hover {
+  background: var(--color-cyprus-deep);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 70, 67, 0.38);
+}
+

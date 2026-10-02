@@ -37,44 +37,65 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="brand">
-        <a href="/home" style="text-decoration: none; color: inherit;" title="Conhecer Secretary AI Agent">
+        <a href="/home" style="text-decoration: none; color: inherit;" title="Business OS — Executive AI Workspace">
           <div class="brand-text">
-            <h1 style="font-size: 1.05rem; font-weight: 700; margin: 0;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-cyprus); margin-right: 6px;"></i> Secretary AI Agent</h1>
-            <span class="brand-subtitle">Assistente Executiva</span>
+            <h1 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--color-cyprus); letter-spacing: -0.02em;">
+              <i class="fa-solid fa-cube" style="color: var(--color-cyprus); margin-right: 6px;"></i> Business OS
+            </h1>
+            <span class="brand-subtitle" style="font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-slate); font-weight: 600;">Executive Workspace</span>
           </div>
         </a>
       </div>
 
       <nav class="nav-menu">
-        <button class="nav-item active" data-tab="chat">
-          <i class="fa-solid fa-comments"></i>
-          <span>Chat Executivo</span>
-        </button>
-        <button class="nav-item" data-tab="tasks">
-          <i class="fa-solid fa-calendar-check"></i>
-          <span>Agenda & Tarefas</span>
-          <span class="counter" id="task-counter">0</span>
-        </button>
-        <button class="nav-item" data-tab="memories">
-          <i class="fa-solid fa-brain"></i>
-          <span>Memória & Fatos</span>
-        </button>
-        <button class="nav-item" data-tab="ai-hub">
-          <i class="fa-solid fa-chart-line"></i>
-          <span>Uso & Gastos de IA</span>
+        <div class="nav-section-label" style="font-size: 0.68rem; font-weight: 700; color: var(--color-muted); padding: 8px 12px 4px; letter-spacing: 0.06em; text-transform: uppercase;">WORKSPACE & OPERAÇÕES</div>
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Visão Geral</span>
         </button>
         <button class="nav-item" data-tab="meta-business">
           <i class="fa-brands fa-meta" style="color: #0081FB;"></i>
-          <span>Meta Business</span>
+          <span>Meta Ads & Growth</span>
+        </button>
+        <button class="nav-item" data-tab="ecommerce">
+          <i class="fa-solid fa-store" style="color: var(--color-mint);"></i>
+          <span>Operações & Lojas</span>
+        </button>
+        <button class="nav-item" data-tab="tasks">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Google & Tarefas</span>
+          <span class="counter" id="task-counter">0</span>
+        </button>
+        <button class="nav-item" data-tab="skills">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-amber);"></i>
+          <span>Dynamic Skills</span>
+        </button>
+        <button class="nav-item" data-tab="webhooks">
+          <i class="fa-solid fa-network-wired"></i>
+          <span>Webhooks & Hub</span>
+        </button>
+
+        <div class="nav-section-label" style="font-size: 0.68rem; font-weight: 700; color: var(--color-muted); padding: 14px 12px 4px; letter-spacing: 0.06em; text-transform: uppercase;">AUDITORIA & GESTÃO</div>
+        <button class="nav-item" data-tab="ai-hub">
+          <i class="fa-solid fa-coins"></i>
+          <span>Custos & Uso de IA</span>
+        </button>
+        <button class="nav-item" data-tab="memories">
+          <i class="fa-solid fa-brain"></i>
+          <span>Memória Corporativa</span>
         </button>
         <button class="nav-item" data-tab="logs">
           <i class="fa-solid fa-terminal"></i>
-          <span>Logs do Sistema</span>
+          <span>Terminal de Logs</span>
           <span class="counter" id="logs-counter">0</span>
         </button>
         <button class="nav-item" data-tab="system">
           <i class="fa-solid fa-sliders"></i>
           <span>Configurações</span>
+        </button>
+        <button class="nav-item" data-tab="chat">
+          <i class="fa-solid fa-comments"></i>
+          <span>Chat Imersivo</span>
         </button>
       </nav>
 
@@ -107,12 +128,14 @@
       <!-- Top Bar -->
       <header class="topbar">
         <div class="page-title">
-          <h1 id="tab-heading">Chat com a Secretária</h1>
-          <p id="tab-subheading">Converse em tempo real e teste comandos de agendamento e memória.</p>
+          <h1 id="tab-heading">Visão Geral Executiva</h1>
+          <p id="tab-subheading">Centro de comando dos seus negócios, tráfego, vendas e agenda.</p>
         </div>
         <div class="topbar-actions">
-          <button class="topbar-icon-btn btn-new-chat" id="btn-new-chat" title="Nova Conversa">
-            <i class="fa-solid fa-plus"></i>
+          <button class="topbar-pill-btn btn-copilot-toggle" id="btn-toggle-copilot" onclick="toggleCopilotDrawer()" title="Abrir Victoria Copilot (Cmd+K)">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-mint);"></i>
+            <span>Victoria Copilot</span>
+            <span class="status-indicator-dot" style="background: var(--color-mint); box-shadow: 0 0 6px var(--color-mint); margin-left: 2px;"></span>
           </button>
           <button class="topbar-icon-btn btn-wa" id="btn-whatsapp-header" title="WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
@@ -131,8 +154,290 @@
         </div>
       </header>
 
-      <!-- TAB 1: Chat Interativo -->
-      <section class="tab-panel active" id="tab-chat">
+      <!-- TAB 0: Visão Geral Executiva (Dashboard) -->
+      <section class="tab-panel active" id="tab-dashboard">
+        <div class="dashboard-hero-banner">
+          <div>
+            <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-slate); margin-bottom: 4px;">
+              Centro de Inteligência & Operações
+            </div>
+            <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--color-cyprus); margin: 0; letter-spacing: -0.02em;">
+              Business OS Workspace
+            </h2>
+            <p style="font-size: 0.86rem; color: var(--color-slate); margin-top: 4px; margin-bottom: 0;">
+              Visão unificada em tempo real de tráfego, vendas, rotinas operacionais e agenda.
+            </p>
+          </div>
+          <div class="dashboard-quick-actions">
+            <button class="btn btn-primary btn-sm" onclick="sendCopilotPrompt('Victoria, faça um briefing executivo consolidado com status das lojas, tarefas de hoje e anúncios.')">
+              <i class="fa-solid fa-sun"></i> Briefing do Dia
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('ecommerce')">
+              <i class="fa-solid fa-store"></i> Ver Lojas
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('meta-business')">
+              <i class="fa-brands fa-meta" style="color: #0081FB;"></i> Meta Ads
+            </button>
+          </div>
+        </div>
+
+        <!-- Bento Grid de KPIs -->
+        <div class="bento-kpi-grid">
+          <!-- Card 1: Vendas Lojas -->
+          <div class="bento-card" onclick="switchTab('ecommerce')">
+            <div class="bento-card-header">
+              <span class="bento-label">Vendas Lojas (Hoje)</span>
+              <span class="badge badge-mint"><i class="fa-solid fa-arrow-trend-up"></i> 2 Lojas</span>
+            </div>
+            <div class="bento-main-metric" id="dash-sales-today">R$ 0,00</div>
+            <div class="bento-sub-metric" id="dash-orders-today"><i class="fa-solid fa-box"></i> 0 pedidos faturados</div>
+          </div>
+
+          <!-- Card 2: Meta Ads -->
+          <div class="bento-card" onclick="switchTab('meta-business')">
+            <div class="bento-card-header">
+              <span class="bento-label">Meta Ads (Investimento)</span>
+              <span class="badge badge-cyprus"><i class="fa-brands fa-meta"></i> Tráfego</span>
+            </div>
+            <div class="bento-main-metric" id="dash-meta-spend">R$ 0,00</div>
+            <div class="bento-sub-metric" id="dash-meta-leads"><i class="fa-solid fa-users"></i> 0 leads hoje</div>
+          </div>
+
+          <!-- Card 3: Google Agenda -->
+          <div class="bento-card" onclick="switchTab('tasks')">
+            <div class="bento-card-header">
+              <span class="bento-label">Google Agenda (Hoje)</span>
+              <span class="badge badge-amber"><i class="fa-brands fa-google"></i> Meet</span>
+            </div>
+            <div class="bento-main-metric" id="dash-calendar-count">0</div>
+            <div class="bento-sub-metric" id="dash-calendar-next">Sem reuniões pendentes</div>
+          </div>
+
+          <!-- Card 4: Tarefas Críticas -->
+          <div class="bento-card" onclick="switchTab('tasks')">
+            <div class="bento-card-header">
+              <span class="bento-label">Tarefas Pendentes</span>
+              <span class="badge badge-coral"><i class="fa-solid fa-list-check"></i> Fila</span>
+            </div>
+            <div class="bento-main-metric" id="dash-tasks-count">0</div>
+            <div class="bento-sub-metric" id="dash-tasks-info">Acompanhar pendências</div>
+          </div>
+
+          <!-- Card 5: Custo IA do Mês -->
+          <div class="bento-card" onclick="switchTab('ai-hub')">
+            <div class="bento-card-header">
+              <span class="bento-label">Telemetria de IA</span>
+              <span class="badge badge-mint"><i class="fa-solid fa-bolt"></i> DeepSeek V4</span>
+            </div>
+            <div class="bento-main-metric" id="dash-ai-cost">R$ 0,00</div>
+            <div class="bento-sub-metric" id="dash-ai-tokens"><i class="fa-solid fa-coins"></i> 0 tokens consumidos</div>
+          </div>
+
+          <!-- Card 6: Automações & Webhooks -->
+          <div class="bento-card" onclick="switchTab('skills')">
+            <div class="bento-card-header">
+              <span class="bento-label">Dynamic Skills</span>
+              <span class="badge badge-cyprus"><i class="fa-solid fa-robot"></i> Ativas</span>
+            </div>
+            <div class="bento-main-metric" id="dash-skills-count">--</div>
+            <div class="bento-sub-metric">Rotinas operacionais autônomas</div>
+          </div>
+        </div>
+
+        <!-- Módulos de Visão Rápida Dupla -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-top: 20px;">
+          <!-- Próximos Compromissos & Briefing -->
+          <div class="bento-module-card">
+            <div class="bento-module-header">
+              <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--color-ink); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-calendar-day" style="color: var(--color-cyprus);"></i> Agenda & Pautas do Dia
+              </h3>
+              <button class="btn btn-secondary btn-xs" onclick="fetchGoogleEvents()">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+            <div id="dash-upcoming-events" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+              <div style="color: var(--color-muted); font-size: 0.84rem; padding: 16px; text-align: center;">Carregando compromissos do Google Calendar...</div>
+            </div>
+          </div>
+
+          <!-- Alertas Operacionais das Lojas -->
+          <div class="bento-module-card">
+            <div class="bento-module-header">
+              <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--color-ink); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-bell" style="color: var(--color-amber);"></i> Alertas & Expedição das Lojas
+              </h3>
+              <button class="btn btn-secondary btn-xs" onclick="fetchEcommerceData()">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+            <div id="dash-store-alerts" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+              <div style="color: var(--color-muted); font-size: 0.84rem; padding: 16px; text-align: center;">Carregando dados das lojas...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Operações & Lojas -->
+      <section class="tab-panel" id="tab-ecommerce">
+        <div class="panel-header-actions">
+          <div class="filters" id="ecom-period-filters">
+            <button class="filter-btn active" data-period="1" onclick="setEcommercePeriod(1)">Hoje (1 Dia)</button>
+            <button class="filter-btn" data-period="7" onclick="setEcommercePeriod(7)">Últimos 7 Dias</button>
+            <button class="filter-btn" data-period="30" onclick="setEcommercePeriod(30)">Últimos 30 Dias</button>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="fetchEcommerceData()">
+            <i class="fa-solid fa-arrows-rotate"></i> Atualizar Lojas
+          </button>
+        </div>
+
+        <!-- Cards das 2 Lojas + Consolidado -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <!-- Card Consolidado -->
+          <div class="ecom-store-card ecom-consolidated">
+            <div class="ecom-card-title">
+              <span><i class="fa-solid fa-chart-line"></i> Vendas Consolidadas (2 Lojas)</span>
+              <span class="badge badge-mint" id="ecom-period-badge">Hoje</span>
+            </div>
+            <div class="ecom-card-revenue" id="ecom-total-revenue">R$ 0,00</div>
+            <div class="ecom-card-meta">
+              <span id="ecom-total-orders"><i class="fa-solid fa-box"></i> 0 pedidos</span>
+              <span id="ecom-total-ticket"><i class="fa-solid fa-receipt"></i> Ticket médio: R$ 0,00</span>
+            </div>
+          </div>
+
+          <!-- Card KlimaParts (Loja 1) -->
+          <div class="ecom-store-card">
+            <div class="ecom-card-title">
+              <span><i class="fa-solid fa-store" style="color: var(--color-cyprus);"></i> KlimaParts (Loja 1)</span>
+              <span class="badge badge-cyprus">Loja Principal</span>
+            </div>
+            <div class="ecom-card-revenue" id="ecom-klima-revenue">R$ 0,00</div>
+            <div class="ecom-card-meta">
+              <span id="ecom-klima-orders"><i class="fa-solid fa-box"></i> 0 pedidos</span>
+              <span id="ecom-klima-ticket"><i class="fa-solid fa-receipt"></i> Ticket: R$ 0,00</span>
+            </div>
+          </div>
+
+          <!-- Card ArmorCar (Loja 2) -->
+          <div class="ecom-store-card">
+            <div class="ecom-card-title">
+              <span><i class="fa-solid fa-shield-halved" style="color: var(--color-amber);"></i> ArmorCar (Loja 2)</span>
+              <span class="badge badge-amber">Loja Secundária</span>
+            </div>
+            <div class="ecom-card-revenue" id="ecom-armor-revenue">R$ 0,00</div>
+            <div class="ecom-card-meta">
+              <span id="ecom-armor-orders"><i class="fa-solid fa-box"></i> 0 pedidos</span>
+              <span id="ecom-armor-ticket"><i class="fa-solid fa-receipt"></i> Ticket: R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabelas de Envios e Perguntas -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px;">
+          <!-- Envios Pendentes -->
+          <div class="bento-module-card">
+            <div class="bento-module-header">
+              <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--color-ink); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-truck-fast" style="color: var(--color-cyprus);"></i> Pedidos & Envios Pendentes
+              </h3>
+              <span class="badge badge-cyprus" id="ecom-pending-shipments-count">0 pendentes</span>
+            </div>
+            <div id="ecom-shipments-list" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+              <div style="color: var(--color-muted); font-size: 0.85rem; padding: 16px; text-align: center;">Nenhum envio pendente no momento.</div>
+            </div>
+          </div>
+
+          <!-- Perguntas do Mercado Livre -->
+          <div class="bento-module-card">
+            <div class="bento-module-header">
+              <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--color-ink); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-comments" style="color: var(--color-mint);"></i> Perguntas do Mercado Livre
+              </h3>
+              <span class="badge badge-mint" id="ecom-questions-count">0 perguntas</span>
+            </div>
+            <div id="ecom-questions-list" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+              <div style="color: var(--color-muted); font-size: 0.85rem; padding: 16px; text-align: center;">Nenhuma pergunta pendente de resposta.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Dynamic Skills -->
+      <section class="tab-panel" id="tab-skills">
+        <div class="panel-header-actions">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Catálogo de Dynamic Skills
+            </h3>
+            <p style="font-size: 0.84rem; color: var(--color-slate); margin-top: 2px;">
+              Habilidades compostas criadas e executadas em tempo real com validação e Dry-Run.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="fetchSkillsCatalog()">
+            <i class="fa-solid fa-arrows-rotate"></i> Atualizar Skills
+          </button>
+        </div>
+
+        <div id="skills-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 16px;">
+          <!-- Carregado via JS -->
+        </div>
+      </section>
+
+      <!-- TAB: Webhooks & Workers Hub -->
+      <section class="tab-panel" id="tab-webhooks">
+        <div class="panel-header-actions">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">
+              <i class="fa-solid fa-network-wired"></i> Webhooks & Integrações Externas
+            </h3>
+            <p style="font-size: 0.84rem; color: var(--color-slate); margin-top: 2px;">
+              Envie alertas e dados de qualquer aplicativo (n8n, Make, ERPs, scripts) para o WhatsApp e Workspace.
+            </p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 16px;">
+          <!-- Card de Endpoint de Notificação -->
+          <div class="bento-module-card">
+            <div class="bento-module-header">
+              <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0;"><i class="fa-brands fa-whatsapp" style="color: var(--color-mint);"></i> Webhook de Notificações WhatsApp</h3>
+              <span class="badge badge-mint">Ativo</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--color-slate); margin-bottom: 12px; margin-top: 6px;">
+              Endpoint universal para entregar relatórios e alertas diretamente no seu WhatsApp:
+            </div>
+            <div class="webhook-url-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 8px 12px;">
+              <code style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyprus); font-weight: 600;">https://b-os.malves.dev.br/api/webhook/notify</code>
+              <button class="btn btn-secondary btn-xs" onclick="navigator.clipboard.writeText('https://b-os.malves.dev.br/api/webhook/notify'); showToast('URL copiada!', 'success');"><i class="fa-solid fa-copy"></i> Copiar</button>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--color-muted); margin-top: 8px;">
+              Token: <code>business_master_secret_2026</code> (via body JSON, header <code>x-webhook-token</code> ou query <code>?token=</code>).
+            </div>
+          </div>
+
+          <!-- Card de Endpoint de Auto-Deploy -->
+          <div class="bento-module-card">
+            <div class="bento-module-header">
+              <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0;"><i class="fa-brands fa-github" style="color: var(--color-cyprus);"></i> Auto-Deploy Remoto HTTP & Git</h3>
+              <span class="badge badge-cyprus">Branch: main</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--color-slate); margin-bottom: 12px; margin-top: 6px;">
+              Dispara atualização remota do repositório no servidor sem precisar de SSH:
+            </div>
+            <div class="webhook-url-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 8px 12px;">
+              <code style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyprus); font-weight: 600;">https://b-os.malves.dev.br/api/system/deploy</code>
+              <button class="btn btn-secondary btn-xs" onclick="navigator.clipboard.writeText('https://b-os.malves.dev.br/api/system/deploy'); showToast('URL copiada!', 'success');"><i class="fa-solid fa-copy"></i> Copiar</button>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--color-muted); margin-top: 8px;">
+              Header: <code>x-deploy-key: business_master_secret_2026</code>.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Chat Imersivo -->
+      <section class="tab-panel" id="tab-chat">
         <div class="chat-container">
           <div class="chat-messages" id="chat-messages">
             <!-- Mensagem de Boas-vindas Inicial -->
@@ -140,12 +445,12 @@
               <div class="avatar"><i class="fa-solid fa-robot"></i></div>
               <div class="bubble-body">
                 <div class="bubble-header">
-                  <strong>Victoria</strong>
+                  <strong>Victoria Copilot</strong>
                   <small>Agora</small>
                 </div>
                 <div class="bubble-content">
-                  <p>Olá! Sou a <strong>Victoria</strong>, sua Secretária Executiva pessoal.</p>
-                  <p>Como posso ajudar você com seus compromissos, contatos e tarefas hoje?</p>
+                  <p>Olá, Maychel! Sou a <strong>Victoria</strong>, sua Copilot Executiva conectada ao <strong>Business OS</strong>.</p>
+                  <p>Posso te ajudar com análises de anúncios, vendas das lojas, reuniões do Google Meet ou agendamentos.</p>
                 </div>
               </div>
             </div>
@@ -157,7 +462,7 @@
               <textarea 
                 id="chat-input" 
                 rows="1" 
-                placeholder="Digite sua mensagem para a secretária... (Pressione Enter para enviar)"
+                placeholder="Digite sua mensagem para a Victoria... (Pressione Enter para enviar)"
                 required
               ></textarea>
               <button type="submit" class="btn btn-primary btn-send" id="btn-send">
@@ -1081,9 +1386,73 @@
     </div>
   </div>
 
+  <!-- ============================================================================
+       GLOBAL VICTORIA COPILOT DRAWER (Slide-Over Panel)
+       ============================================================================ -->
+  <div id="copilot-backdrop" class="copilot-backdrop" onclick="toggleCopilotDrawer(false)"></div>
+  <aside id="copilot-drawer" class="copilot-drawer" aria-label="Victoria Copilot">
+    <div class="copilot-drawer-header">
+      <div class="copilot-drawer-brand">
+        <div class="copilot-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div>
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0; color: var(--color-cyprus);">Victoria Copilot</h3>
+          <span style="font-size: 0.72rem; color: var(--color-mint); display: flex; align-items: center; gap: 4px; font-weight: 600;">
+            <span class="pulse-dot-sm"></span> Chief of Staff Online
+          </span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn-icon-sm" id="btn-copilot-clear" title="Limpar conversa" onclick="clearCopilotChat()"><i class="fa-solid fa-trash-can"></i></button>
+        <button class="btn-icon-sm" id="btn-copilot-close" title="Fechar Copilot" onclick="toggleCopilotDrawer(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <!-- Quick Prompt Pills -->
+    <div class="copilot-quick-pills">
+      <button class="copilot-pill" onclick="sendCopilotPrompt('Resumo consolidado das lojas hoje')">📊 Vendas Hoje</button>
+      <button class="copilot-pill" onclick="sendCopilotPrompt('Quais minhas tarefas para hoje?')">📋 Tarefas Hoje</button>
+      <button class="copilot-pill" onclick="sendCopilotPrompt('Como está o desempenho dos anúncios do Meta Ads?')">📈 Meta Ads</button>
+      <button class="copilot-pill" onclick="sendCopilotPrompt('briefing')">☀️ Briefing</button>
+    </div>
+
+    <!-- Message Stream -->
+    <div class="copilot-drawer-messages" id="copilot-messages">
+      <div class="copilot-bubble copilot-assistant">
+        <div class="copilot-bubble-header">
+          <strong>Victoria</strong>
+          <small>Agora</small>
+        </div>
+        <div class="copilot-bubble-content">
+          <p>Olá, Maychel! Estou conectada a todos os módulos do <strong>Business OS</strong>.</p>
+          <p>Como posso te apoiar com análises de anúncios, vendas, reuniões ou tarefas agora?</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Footer -->
+    <div class="copilot-drawer-footer">
+      <form id="copilot-form" class="copilot-form" onsubmit="handleCopilotSubmit(event)">
+        <input 
+          type="text" 
+          id="copilot-input" 
+          placeholder="Pergunte à Victoria ou digite um comando..." 
+          autocomplete="off"
+          required
+        />
+        <button type="submit" class="btn-copilot-send" id="btn-copilot-send"><i class="fa-solid fa-paper-plane"></i></button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Floating Action Button for Copilot -->
+  <button id="btn-copilot-fab" class="copilot-fab" onclick="toggleCopilotDrawer()" title="Abrir Victoria Copilot (Cmd+K)">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+    <span>Victoria Copilot</span>
+  </button>
+
   <!-- Standardized Toast Notifications Container -->
   <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=20260928_1955"></script>
+  <script src="app.js?v=20261002_2000"></script>
 </body>
 </html>

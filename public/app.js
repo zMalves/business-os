@@ -1,9 +1,10 @@
 // State Management
-let currentTab = 'chat';
+let currentTab = 'dashboard';
 let activeTaskFilter = 'ALL';
 let allTasks = [];
 let allMemories = [];
 let activeConversationId = localStorage.getItem('active_conversation_id') || null;
+let currentEcommerceDays = 1;
 
 // DOM Elements
 const navItems = document.querySelectorAll('.nav-item');
@@ -20,13 +21,17 @@ const taskCounter = document.getElementById('task-counter');
 const memoriesGrid = document.getElementById('memories-grid');
 
 const tabTitles = {
-  chat: { title: 'Chat Executivo', sub: 'Converse em tempo real e gerencie compromissos e lembretes.' },
-  tasks: { title: 'Agenda & Gerenciador de Tarefas', sub: 'Acompanhe compromissos e tarefas gerenciadas pela secretária.' },
-  memories: { title: 'Memória de Longo Prazo', sub: 'Fatos e preferências que a secretária memorizou para contextualizar conversas.' },
-  'ai-hub': { title: 'Uso & Gastos de IA', sub: 'Monitoramento detalhado de tokens consumidos, áudios transcritos e custos acumulados.' },
-  'meta-business': { title: 'Meta Business & Gerenciador de Anúncios', sub: 'Gerenciamento de múltiplas BMs e tráfego pago de clientes com a Victoria.' },
-  logs: { title: 'Logs do Sistema em Tempo Real', sub: 'Monitoramento ao vivo de eventos do WhatsApp, execuções da IA, webhooks e diagnóstico.' },
-  system: { title: 'Configurações do Sistema', sub: 'Preferências de exibição e monitoramento dos serviços.' }
+  dashboard: { title: 'Visão Geral Executiva', sub: 'Centro de comando dos seus negócios, tráfego, vendas e agenda.' },
+  ecommerce: { title: 'Operações & Lojas', sub: 'Faturamento consolidado, expedição e monitoramento do Mercado Livre.' },
+  skills: { title: 'Dynamic Skills Engine', sub: 'Catálogo de habilidades compostas e execução com validação em tempo real.' },
+  webhooks: { title: 'Webhooks & Hub de Workers', sub: 'Gerenciamento de eventos externos e integrações de automação.' },
+  tasks: { title: 'Google Suite & Gerenciador de Tarefas', sub: 'Acompanhe compromissos, Google Calendar, Meet e pendências.' },
+  memories: { title: 'Memória Corporativa', sub: 'Fatos, regras de negócio e preferências memorizadas pela IA.' },
+  'ai-hub': { title: 'Finanças & Custos de IA', sub: 'Monitoramento detalhado de tokens consumidos, áudios e custos em R$.' },
+  'meta-business': { title: 'Meta Ads & Growth Hub', sub: 'Gerenciamento de múltiplas BMs, tráfego pago e criativos com a Victoria.' },
+  logs: { title: 'Terminal de Logs em Tempo Real', sub: 'Monitoramento ao vivo de eventos do WhatsApp, execuções e webhooks.' },
+  system: { title: 'Configurações do Sistema', sub: 'Preferências de exibição e monitoramento dos serviços.' },
+  chat: { title: 'Chat Imersivo com a Victoria', sub: 'Converse em tela cheia com a sua Copilot Executiva.' }
 };
 
 // Authentication Management
@@ -95,6 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMetaBusiness();
   setupLogs();
   fetchHealth();
+  fetchDashboardOverview();
+  fetchEcommerceData();
   fetchTasks();
   fetchCronJobs();
   fetchMemories();
@@ -106,6 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   btnRefresh.addEventListener('click', () => {
     fetchHealth();
+    fetchDashboardOverview();
+    fetchEcommerceData();
     fetchTasks();
     fetchCronJobs();
     fetchMemories();
@@ -167,6 +176,10 @@ function switchTab(tab) {
     tabSubheading.textContent = tabTitles[tab].sub;
   }
 
+  if (tab === 'dashboard') fetchDashboardOverview();
+  if (tab === 'ecommerce') fetchEcommerceData();
+  if (tab === 'skills') fetchSkillsCatalog();
+  if (tab === 'meta-business') fetchMetaBusinessData();
   if (tab === 'tasks') fetchTasks();
   if (tab === 'memories') fetchMemories();
   if (tab === 'ai-hub') {
@@ -178,6 +191,7 @@ function switchTab(tab) {
   if (tab === 'logs') fetchLogs();
   if (tab === 'system') fetchHealth();
 }
+window.switchTab = switchTab;
 
 // Chat Functionality
 function setupChat() {
@@ -2665,6 +2679,377 @@ window.openClientInstagramModal = async function(clientId) {
     alert(`Erro de conexão: ${err.message}`);
   }
 };
+
+/* ============================================================================
+   BUSINESS OS — EXECUTIVE WORKSPACE MODULES (DASHBOARD, ECOMMERCE, SKILLS, COPILOT)
+   ============================================================================ */
+
+// 1. Dashboard Overview Loader
+async function fetchDashboardOverview() {
+  try {
+    // A. Vendas de Hoje
+    fetch('/api/ecommerce/overview?days=1')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data) {
+          const rev = d.data.total_amount || 0;
+          const ord = d.data.total_orders || 0;
+          const salesEl = document.getElementById('dash-sales-today');
+          const ordEl = document.getElementById('dash-orders-today');
+          if (salesEl) salesEl.textContent = `R$ ${rev.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          if (ordEl) ordEl.innerHTML = `<i class="fa-solid fa-box"></i> ${ord} pedidos hoje`;
+        }
+      })
+      .catch(() => {});
+
+    // B. Meta Ads Overview
+    fetch('/api/meta/clients')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && Array.isArray(d.clients)) {
+          const activeClients = d.clients.filter(c => c.isActive);
+          const metaSpendEl = document.getElementById('dash-meta-spend');
+          const metaLeadsEl = document.getElementById('dash-meta-leads');
+          if (metaSpendEl) metaSpendEl.textContent = `${activeClients.length} Clientes`;
+          if (metaLeadsEl) metaLeadsEl.innerHTML = `<i class="fa-brands fa-meta"></i> ${d.clients.length} contas configuradas`;
+        }
+      })
+      .catch(() => {});
+
+    // C. Tarefas
+    fetch('/api/tasks')
+      .then(r => r.json())
+      .then(d => {
+        if (d.tasks) {
+          const pending = d.tasks.filter(t => t.status === 'PENDING');
+          const tCountEl = document.getElementById('dash-tasks-count');
+          const tInfoEl = document.getElementById('dash-tasks-info');
+          if (tCountEl) tCountEl.textContent = pending.length;
+          if (tInfoEl) tInfoEl.textContent = `${pending.length} pendências na fila`;
+        }
+      })
+      .catch(() => {});
+
+    // D. IA Telemetria
+    fetch('/api/usage/stats?days=30')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.stats) {
+          const costBrl = d.stats.totalCostBrl || 0;
+          const tokens = d.stats.totalTokens || 0;
+          const costEl = document.getElementById('dash-ai-cost');
+          const tokEl = document.getElementById('dash-ai-tokens');
+          if (costEl) costEl.textContent = `R$ ${costBrl.toFixed(2)}`;
+          if (tokEl) tokEl.innerHTML = `<i class="fa-solid fa-coins"></i> ${tokens.toLocaleString('pt-BR')} tokens (30d)`;
+        }
+      })
+      .catch(() => {});
+
+    // E. Skills Ativas
+    fetch('/api/skills')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && Array.isArray(d.skills)) {
+          const countEl = document.getElementById('dash-skills-count');
+          if (countEl) countEl.textContent = d.skills.length;
+        }
+      })
+      .catch(() => {});
+
+    // F. Alertas das Lojas
+    fetch('/api/ecommerce/orders/pending?days=1')
+      .then(r => r.json())
+      .then(d => {
+        const alertsEl = document.getElementById('dash-store-alerts');
+        if (!alertsEl) return;
+        if (d.success && d.data && Array.isArray(d.data.orders) && d.data.orders.length > 0) {
+          alertsEl.innerHTML = d.data.orders.slice(0, 4).map(o => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-sand-light); border-radius: var(--radius-sm); border: 1px solid var(--color-sand-border);">
+              <div>
+                <strong style="font-size: 0.84rem; color: var(--color-ink);">${o.buyer_name || 'Cliente'}</strong>
+                <div style="font-size: 0.74rem; color: var(--color-muted);">${o.items?.[0]?.title || 'Pedido #' + o.order_id}</div>
+              </div>
+              <span class="badge badge-amber">Despacho</span>
+            </div>
+          `).join('');
+        } else {
+          alertsEl.innerHTML = `<div style="color: var(--color-muted); font-size: 0.84rem; padding: 12px; text-align: center;"><i class="fa-solid fa-circle-check" style="color: var(--color-mint);"></i> Todos os envios do dia estão em dia!</div>`;
+        }
+      })
+      .catch(() => {});
+
+  } catch (err) {
+    console.warn('[Dashboard] Erro ao carregar overview:', err);
+  }
+}
+window.fetchDashboardOverview = fetchDashboardOverview;
+
+// 2. E-Commerce Operations Loader
+async function setEcommercePeriod(days) {
+  currentEcommerceDays = days;
+  const filterBtns = document.querySelectorAll('#ecom-period-filters button');
+  filterBtns.forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.period, 10) === days);
+  });
+  const badge = document.getElementById('ecom-period-badge');
+  if (badge) badge.textContent = days === 1 ? 'Hoje' : `Últimos ${days} Dias`;
+  await fetchEcommerceData();
+}
+window.setEcommercePeriod = setEcommercePeriod;
+
+async function fetchEcommerceData() {
+  try {
+    const days = currentEcommerceDays || 1;
+
+    // Resumo Consolidado
+    const res = await fetch(`/api/ecommerce/overview?days=${days}`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      const rep = data.data;
+      const totalRev = rep.total_amount || 0;
+      const totalOrd = rep.total_orders || 0;
+      const avgTicket = totalOrd > 0 ? totalRev / totalOrd : 0;
+
+      const revEl = document.getElementById('ecom-total-revenue');
+      const ordEl = document.getElementById('ecom-total-orders');
+      const tickEl = document.getElementById('ecom-total-ticket');
+      if (revEl) revEl.textContent = `R$ ${totalRev.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (ordEl) ordEl.innerHTML = `<i class="fa-solid fa-box"></i> ${totalOrd} pedidos`;
+      if (tickEl) tickEl.innerHTML = `<i class="fa-solid fa-receipt"></i> Ticket médio: R$ ${avgTicket.toFixed(2)}`;
+
+      // Loja 1: KlimaParts
+      const kRev = rep.klimaparts?.total_amount || 0;
+      const kOrd = rep.klimaparts?.total_orders || 0;
+      const kTick = kOrd > 0 ? kRev / kOrd : 0;
+      const kRevEl = document.getElementById('ecom-klima-revenue');
+      const kOrdEl = document.getElementById('ecom-klima-orders');
+      const kTickEl = document.getElementById('ecom-klima-ticket');
+      if (kRevEl) kRevEl.textContent = `R$ ${kRev.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (kOrdEl) kOrdEl.innerHTML = `<i class="fa-solid fa-box"></i> ${kOrd} pedidos`;
+      if (kTickEl) kTickEl.innerHTML = `<i class="fa-solid fa-receipt"></i> Ticket: R$ ${kTick.toFixed(2)}`;
+
+      // Loja 2: ArmorCar
+      const aRev = rep.armorcar?.total_amount || 0;
+      const aOrd = rep.armorcar?.total_orders || 0;
+      const aTick = aOrd > 0 ? aRev / aOrd : 0;
+      const aRevEl = document.getElementById('ecom-armor-revenue');
+      const aOrdEl = document.getElementById('ecom-armor-orders');
+      const aTickEl = document.getElementById('ecom-armor-ticket');
+      if (aRevEl) aRevEl.textContent = `R$ ${aRev.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (aOrdEl) aOrdEl.innerHTML = `<i class="fa-solid fa-box"></i> ${aOrd} pedidos`;
+      if (aTickEl) aTickEl.innerHTML = `<i class="fa-solid fa-receipt"></i> Ticket: R$ ${aTick.toFixed(2)}`;
+    }
+
+    // Envios Pendentes
+    fetch(`/api/ecommerce/orders/pending?days=${days}`)
+      .then(r => r.json())
+      .then(d => {
+        const listEl = document.getElementById('ecom-shipments-list');
+        const countEl = document.getElementById('ecom-pending-shipments-count');
+        if (!listEl) return;
+        if (d.success && d.data && Array.isArray(d.data.orders) && d.data.orders.length > 0) {
+          if (countEl) countEl.textContent = `${d.data.orders.length} pendentes`;
+          listEl.innerHTML = d.data.orders.map(o => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--color-sand-light); border-radius: var(--radius-sm); border: 1px solid var(--color-sand-border);">
+              <div>
+                <strong style="font-size: 0.86rem; color: var(--color-ink);">${o.buyer_name || 'Comprador'}</strong>
+                <div style="font-size: 0.76rem; color: var(--color-slate);">${o.items?.[0]?.title || 'Pedido #' + o.order_id}</div>
+                <div style="font-size: 0.72rem; color: var(--color-muted);">${new Date(o.date_created).toLocaleString('pt-BR')}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-weight: 700; color: var(--color-cyprus); font-size: 0.88rem;">R$ ${(o.total_amount || 0).toFixed(2)}</div>
+                <span class="badge badge-amber" style="margin-top: 4px;">Pendente</span>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          if (countEl) countEl.textContent = '0 pendentes';
+          listEl.innerHTML = `<div style="color: var(--color-muted); font-size: 0.84rem; padding: 20px; text-align: center;"><i class="fa-solid fa-circle-check" style="color: var(--color-mint); font-size: 1.2rem; display: block; margin-bottom: 6px;"></i> Nenhum pedido aguardando despacho!</div>`;
+        }
+      })
+      .catch(() => {});
+
+    // Perguntas Mercado Livre
+    fetch('/api/ecommerce/questions/pending')
+      .then(r => r.json())
+      .then(d => {
+        const qListEl = document.getElementById('ecom-questions-list');
+        const qCountEl = document.getElementById('ecom-questions-count');
+        if (!qListEl) return;
+        if (d.success && d.data && Array.isArray(d.data.questions) && d.data.questions.length > 0) {
+          if (qCountEl) qCountEl.textContent = `${d.data.questions.length} perguntas`;
+          qListEl.innerHTML = d.data.questions.map(q => `
+            <div style="padding: 10px 12px; background: var(--color-sand-light); border-radius: var(--radius-sm); border: 1px solid var(--color-sand-border);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <strong style="font-size: 0.82rem; color: var(--color-cyprus);">${q.item_title || 'Anúncio'}</strong>
+                <span class="badge badge-coral">Sem resposta</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--color-ink); margin: 0;">"${q.text || ''}"</p>
+            </div>
+          `).join('');
+        } else {
+          if (qCountEl) qCountEl.textContent = '0 perguntas';
+          qListEl.innerHTML = `<div style="color: var(--color-muted); font-size: 0.84rem; padding: 20px; text-align: center;"><i class="fa-solid fa-circle-check" style="color: var(--color-mint); font-size: 1.2rem; display: block; margin-bottom: 6px;"></i> Nenhuma pergunta pendente no Mercado Livre!</div>`;
+        }
+      })
+      .catch(() => {});
+
+  } catch (err) {
+    console.warn('[Ecommerce] Erro ao carregar dados:', err);
+  }
+}
+window.fetchEcommerceData = fetchEcommerceData;
+
+// 3. Dynamic Skills Catalog Loader
+async function fetchSkillsCatalog() {
+  const grid = document.getElementById('skills-catalog-grid');
+  if (!grid) return;
+
+  try {
+    const res = await fetch('/api/skills');
+    const data = await res.json();
+    if (data.success && Array.isArray(data.skills) && data.skills.length > 0) {
+      grid.innerHTML = data.skills.map(s => `
+        <div class="bento-module-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">${s.displayName || s.name}</h4>
+              <span class="badge ${s.isActive ? 'badge-mint' : 'badge-coral'}">${s.isActive ? 'Ativa' : 'Pausada'}</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--color-slate); line-height: 1.4; margin-bottom: 12px;">${s.description || 'Sem descrição.'}</p>
+            ${Array.isArray(s.triggerExamples) && s.triggerExamples.length > 0 ? `
+              <div style="font-size: 0.74rem; color: var(--color-muted); margin-bottom: 8px;">
+                <strong>Gatilhos:</strong> ${s.triggerExamples.map(t => `<code>${t}</code>`).join(' ')}
+              </div>
+            ` : ''}
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--color-sand-border-soft); padding-top: 10px;">
+            <button class="btn btn-secondary btn-xs" onclick="runSkillDryRun('${s.id}')"><i class="fa-solid fa-play"></i> Simular (Dry-Run)</button>
+            <button class="btn btn-secondary btn-xs" onclick="toggleSkillActive('${s.id}')"><i class="fa-solid fa-power-off"></i> ${s.isActive ? 'Pausar' : 'Ativar'}</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--color-muted); font-size: 0.88rem; padding: 30px; text-align: center; background: var(--color-surface-pure); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm);"><i class="fa-solid fa-wand-magic-sparkles" style="font-size: 1.6rem; color: var(--color-cyprus); margin-bottom: 8px; display: block;"></i>Nenhuma Dynamic Skill criada ainda. Peça para a Victoria no chat: <em>"Aprenda a fazer um resumo das lojas..."</em></div>`;
+    }
+  } catch (err) {
+    console.warn('[Skills] Erro ao carregar catálogo:', err);
+  }
+}
+window.fetchSkillsCatalog = fetchSkillsCatalog;
+
+// 4. Global Victoria Copilot Drawer
+function toggleCopilotDrawer(forceState) {
+  const drawer = document.getElementById('copilot-drawer');
+  const backdrop = document.getElementById('copilot-backdrop');
+  if (!drawer || !backdrop) return;
+
+  const isActive = typeof forceState === 'boolean' ? forceState : !drawer.classList.contains('active');
+  drawer.classList.toggle('active', isActive);
+  backdrop.classList.toggle('active', isActive);
+
+  if (isActive) {
+    const input = document.getElementById('copilot-input');
+    if (input) setTimeout(() => input.focus(), 150);
+  }
+}
+window.toggleCopilotDrawer = toggleCopilotDrawer;
+
+// Atalho global Cmd+K / Ctrl+K
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    toggleCopilotDrawer();
+  }
+});
+
+function clearCopilotChat() {
+  const container = document.getElementById('copilot-messages');
+  if (container) {
+    container.innerHTML = `
+      <div class="copilot-bubble copilot-assistant">
+        <div class="copilot-bubble-header">
+          <strong>Victoria</strong>
+          <small>Agora</small>
+        </div>
+        <div class="copilot-bubble-content">
+          <p>Conversa reiniciada. Em que posso te ajudar no <strong>Business OS</strong>?</p>
+        </div>
+      </div>
+    `;
+  }
+}
+window.clearCopilotChat = clearCopilotChat;
+
+function sendCopilotPrompt(text) {
+  toggleCopilotDrawer(true);
+  const input = document.getElementById('copilot-input');
+  if (input) {
+    input.value = text;
+    const form = document.getElementById('copilot-form');
+    if (form) form.dispatchEvent(new Event('submit'));
+  }
+}
+window.sendCopilotPrompt = sendCopilotPrompt;
+
+async function handleCopilotSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const input = document.getElementById('copilot-input');
+  const container = document.getElementById('copilot-messages');
+  if (!input || !container) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Append user bubble
+  const userDiv = document.createElement('div');
+  userDiv.className = 'copilot-bubble copilot-user';
+  userDiv.textContent = text;
+  container.appendChild(userDiv);
+  input.value = '';
+  container.scrollTop = container.scrollHeight;
+
+  // Loading indicator
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'copilot-bubble copilot-assistant';
+  loadingDiv.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processando com Victoria...`;
+  container.appendChild(loadingDiv);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        channel: 'web_copilot',
+        conversationId: activeConversationId
+      })
+    });
+
+    const data = await res.json();
+    if (data.conversationId) {
+      activeConversationId = data.conversationId;
+      localStorage.setItem('active_conversation_id', activeConversationId);
+    }
+
+    if (data.success && data.response) {
+      loadingDiv.innerHTML = `
+        <div class="copilot-bubble-header" style="margin-bottom: 4px; font-weight: 700; color: var(--color-cyprus);">
+          <strong>Victoria</strong>
+        </div>
+        <div class="copilot-bubble-content" style="white-space: pre-wrap;">${data.response}</div>
+      `;
+    } else {
+      loadingDiv.innerHTML = `<span style="color: var(--color-coral);">Erro: ${data.error || 'Não foi possível obter resposta.'}</span>`;
+    }
+  } catch (err) {
+    loadingDiv.innerHTML = `<span style="color: var(--color-coral);">Erro de conexão: ${err.message}</span>`;
+  }
+  container.scrollTop = container.scrollHeight;
+}
+window.handleCopilotSubmit = handleCopilotSubmit;
+
 
 
 
