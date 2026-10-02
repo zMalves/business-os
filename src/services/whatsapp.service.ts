@@ -111,7 +111,7 @@ export class WhatsAppService {
     const targetUrl = (
       webhookUrl ||
       process.env.WEBHOOK_BASE_URL ||
-      'https://secretary.malves.dev.br'
+      'https://b-os.malves.dev.br'
     ).replace(/\/$/, '') + (webhookUrl?.includes('/api/whatsapp/webhook') ? '' : '/api/whatsapp/webhook');
 
     try {

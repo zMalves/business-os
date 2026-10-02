@@ -2,6 +2,17 @@ import { FastifyInstance } from 'fastify';
 import { metaService } from '../services/meta.service.js';
 import { loggerService } from '../services/logger.service.js';
 
+function getMetaRedirectUri(req: any): string {
+  if (process.env.META_REDIRECT_URI && process.env.META_REDIRECT_URI.trim().length > 0) {
+    return process.env.META_REDIRECT_URI.trim();
+  }
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'];
+  const proto = (forwardedProto || req.protocol || 'https').toString().split(',')[0].trim();
+  const host = (forwardedHost || 'b-os.malves.dev.br').toString().split(',')[0].trim();
+  return `${proto}://${host}/api/auth/meta/callback`;
+}
+
 export async function metaRoutes(app: FastifyInstance) {
   // ==========================================
   // 1. OAUTH 2.0 AUTOMÁTICO (META / FACEBOOK & INSTAGRAM)
@@ -15,7 +26,8 @@ export async function metaRoutes(app: FastifyInstance) {
       if (clientId) stateObj.clientId = clientId;
       const state = Object.keys(stateObj).length > 0 ? Buffer.from(JSON.stringify(stateObj)).toString('base64') : undefined;
 
-      const url = metaService.getMetaAuthUrl(undefined, state);
+      const redirectUri = getMetaRedirectUri(req);
+      const url = metaService.getMetaAuthUrl(redirectUri, state);
       return reply.redirect(url);
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
@@ -30,7 +42,8 @@ export async function metaRoutes(app: FastifyInstance) {
       if (clientId) stateObj.clientId = clientId;
       const state = Object.keys(stateObj).length > 0 ? Buffer.from(JSON.stringify(stateObj)).toString('base64') : undefined;
 
-      const url = metaService.getMetaAuthUrl(undefined, state);
+      const redirectUri = getMetaRedirectUri(req);
+      const url = metaService.getMetaAuthUrl(redirectUri, state);
       return reply.send({ success: true, url });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
@@ -63,7 +76,8 @@ export async function metaRoutes(app: FastifyInstance) {
     }
 
     try {
-      const result = await metaService.handleMetaCallback(code);
+      const redirectUri = getMetaRedirectUri(req);
+      const result = await metaService.handleMetaCallback(code, redirectUri);
       let redirectUrl = `/?tab=meta-business&meta=connected&profileId=${encodeURIComponent(result.profile.id)}&profile=${encodeURIComponent(result.profile.name)}`;
       if (clientId) {
         redirectUrl += `&clientId=${encodeURIComponent(clientId)}`;
@@ -83,7 +97,8 @@ export async function metaRoutes(app: FastifyInstance) {
       if (clientId) stateObj.clientId = clientId;
       const state = Object.keys(stateObj).length > 0 ? Buffer.from(JSON.stringify(stateObj)).toString('base64') : undefined;
 
-      const url = metaService.getInstagramAuthUrl(undefined, state);
+      const redirectUri = getMetaRedirectUri(req);
+      const url = metaService.getInstagramAuthUrl(redirectUri, state);
       return reply.redirect(url);
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
@@ -115,7 +130,8 @@ export async function metaRoutes(app: FastifyInstance) {
     }
 
     try {
-      const result = await metaService.handleMetaCallback(code, undefined, 'instagram');
+      const redirectUri = getMetaRedirectUri(req);
+      const result = await metaService.handleMetaCallback(code, redirectUri, 'instagram');
       let redirectUrl = `/?tab=meta-business&meta=connected&provider=instagram&profileId=${encodeURIComponent(result.profile.id)}&profile=${encodeURIComponent(result.profile.name)}`;
       if (clientId) {
         redirectUrl += `&clientId=${encodeURIComponent(clientId)}`;

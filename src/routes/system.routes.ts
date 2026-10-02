@@ -221,7 +221,7 @@ export async function systemRoutes(app: FastifyInstance) {
     try {
       const { whatsappService } = await import('../services/whatsapp.service.js');
       const body = req.body as any;
-      const targetUrl = body?.webhookUrl || process.env.WEBHOOK_BASE_URL || 'https://secretary.malves.dev.br';
+      const targetUrl = body?.webhookUrl || process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br';
       const res = await whatsappService.setWebhook(targetUrl);
       return reply.send({ success: true, message: 'Webhook sincronizado com sucesso!', data: res, targetUrl });
     } catch (err: any) {

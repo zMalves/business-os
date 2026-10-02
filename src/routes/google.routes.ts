@@ -2,13 +2,25 @@ import { FastifyInstance } from 'fastify';
 import { googleService } from '../services/google.service.js';
 import { loggerService } from '../services/logger.service.js';
 
+function getGoogleRedirectUri(req: any): string {
+  if (process.env.GOOGLE_REDIRECT_URI && process.env.GOOGLE_REDIRECT_URI.trim().length > 0) {
+    return process.env.GOOGLE_REDIRECT_URI.trim();
+  }
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'];
+  const proto = (forwardedProto || req.protocol || 'https').toString().split(',')[0].trim();
+  const host = (forwardedHost || 'b-os.malves.dev.br').toString().split(',')[0].trim();
+  return `${proto}://${host}/api/auth/google/callback`;
+}
+
 export async function googleRoutes(app: FastifyInstance) {
   /**
    * Retorna a URL de autorização OAuth do Google
    */
   app.get('/auth/google/url', async (req, reply) => {
     try {
-      const url = await googleService.getAuthUrl();
+      const redirectUri = getGoogleRedirectUri(req);
+      const url = await googleService.getAuthUrl(redirectUri);
       return reply.send({ success: true, url });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
@@ -20,7 +32,8 @@ export async function googleRoutes(app: FastifyInstance) {
    */
   app.get('/auth/google', async (req, reply) => {
     try {
-      const url = await googleService.getAuthUrl();
+      const redirectUri = getGoogleRedirectUri(req);
+      const url = await googleService.getAuthUrl(redirectUri);
       return reply.redirect(url);
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
@@ -45,7 +58,8 @@ export async function googleRoutes(app: FastifyInstance) {
     }
 
     try {
-      const result = await googleService.handleCallback(code);
+      const redirectUri = getGoogleRedirectUri(req);
+      const result = await googleService.handleCallback(code, redirectUri);
       loggerService.system(`Conta Google conectada com sucesso: ${result.email}`, { email: result.email });
       return reply.redirect('/?google=connected&email=' + encodeURIComponent(result.email));
     } catch (err: any) {

@@ -100,7 +100,7 @@ export async function whatsappRoutes(app: FastifyInstance) {
   app.post('/whatsapp/set-webhook', async (req, reply) => {
     try {
       const body = req.body as any;
-      const baseUrl = body?.webhookUrl || process.env.WEBHOOK_BASE_URL || 'https://secretary.malves.dev.br';
+      const baseUrl = body?.webhookUrl || process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br';
       const webhookUrl = `${baseUrl.replace(/\/$/, '')}/api/whatsapp/webhook`;
 
       const result = await whatsappService.setWebhook(webhookUrl);
@@ -241,7 +241,7 @@ export async function whatsappRoutes(app: FastifyInstance) {
                 const filePath = path.join(uploadsDir, filename);
                 const cleanBase64 = base64.replace(/^data:image\/\w+;base64,/, '');
                 fs.writeFileSync(filePath, Buffer.from(cleanBase64, 'base64'));
-                const baseUrl = process.env.WEBHOOK_BASE_URL || 'https://secretary.malves.dev.br';
+                const baseUrl = process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br';
                 imageUrl = `${baseUrl.replace(/\/$/, '')}/uploads/${filename}`;
                 loggerService.whatsapp(`✅ Foto salva com sucesso para anúncios/análise: ${imageUrl}`);
               } catch (saveErr: any) {

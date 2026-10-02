@@ -45,7 +45,9 @@ export class MetaService {
   constructor() {
     this.appId = process.env.META_APP_ID || process.env.FACEBOOK_APP_ID || '***REMOVED***';
     this.appSecret = process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET || '***REMOVED***';
-    this.defaultRedirectUri = process.env.META_REDIRECT_URI || 'https://secretary.malves.dev.br/api/auth/meta/callback';
+    this.defaultRedirectUri =
+      process.env.META_REDIRECT_URI ||
+      `${process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br'}/api/auth/meta/callback`;
   }
 
   /**

@@ -33,6 +33,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://b-os.malves.dev.br/api/auth/google/callback}
+      - META_REDIRECT_URI=${META_REDIRECT_URI:-https://b-os.malves.dev.br/api/auth/meta/callback}
       - DEPLOY_KEY=${DEPLOY_KEY:-business_master_secret_2026}
     networks:
       - business-os-net

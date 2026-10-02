@@ -309,7 +309,7 @@ async function main() {
     setTimeout(async () => {
       try {
         const { whatsappService } = await import('./services/whatsapp.service.js');
-        const webhookUrl = process.env.WEBHOOK_BASE_URL || 'https://secretary.malves.dev.br';
+        const webhookUrl = process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br';
         await whatsappService.setWebhook(webhookUrl);
         loggerService.whatsapp(`✅ Webhook auto-registrado na inicialização: ${webhookUrl}/api/whatsapp/webhook`);
       } catch (e: any) {
