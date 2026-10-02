@@ -228,5 +228,109 @@ export async function systemRoutes(app: FastifyInstance) {
       return reply.status(500).send({ success: false, error: err.message });
     }
   });
+
+  /**
+   * Endpoint para Importar/Migrar Telemetria e Logs da Secretaria antiga
+   */
+  app.post('/system/migrate-telemetry', async (req, reply) => {
+    if (!authenticate(req, reply)) return;
+
+    const { PrismaClient } = await import('@prisma/client');
+    const customUrl = (req.body as any)?.databaseUrl;
+
+    const candidateUrls = [
+      customUrl,
+      'mysql://secretaria_user:secretaria_pass@192.168.18.82:3305/secretaria_db',
+      'mysql://secretaria_user:secretaria_pass@172.17.0.1:3305/secretaria_db',
+      'mysql://secretaria_user:secretaria_pass@host.docker.internal:3305/secretaria_db',
+      'mysql://secretaria_user:secretaria_pass@secretaria-mariadb:3306/secretaria_db',
+      'mysql://root:root_secret_pass@192.168.18.82:3305/secretaria_db',
+      'mysql://root:root_secret_pass@172.17.0.1:3305/secretaria_db',
+      'mysql://root:root_secret_pass@secretaria-mariadb:3306/secretaria_db',
+    ].filter(Boolean) as string[];
+
+    let connectedPrisma: any = null;
+    let connectedUrl: string = '';
+    const attempts = [];
+
+    for (const url of candidateUrls) {
+      const p = new PrismaClient({ datasources: { db: { url } } });
+      try {
+        const testCount = await p.aiUsageLog.count();
+        connectedPrisma = p;
+        connectedUrl = url;
+        attempts.push({ url, success: true, count: testCount });
+        break;
+      } catch (err: any) {
+        attempts.push({ url, success: false, error: err.message });
+        await p.$disconnect().catch(() => {});
+      }
+    }
+
+    if (!connectedPrisma) {
+      return reply.status(500).send({
+        success: false,
+        message: 'Não foi possível conectar ao banco de dados da secretaria antiga nas URLs testadas.',
+        attempts,
+      });
+    }
+
+    try {
+      const sourceLogs = await connectedPrisma.aiUsageLog.findMany({
+        orderBy: { createdAt: 'asc' },
+      });
+
+      let imported = 0;
+      let skipped = 0;
+
+      for (const log of sourceLogs) {
+        const existing = await prisma.aiUsageLog.findUnique({
+          where: { id: log.id },
+        });
+
+        if (!existing) {
+          await prisma.aiUsageLog.create({
+            data: {
+              id: log.id,
+              interactionId: log.interactionId,
+              provider: log.provider,
+              model: log.model,
+              operationType: log.operationType,
+              category: log.category,
+              promptSummary: log.promptSummary,
+              promptTokens: log.promptTokens,
+              completionTokens: log.completionTokens,
+              totalTokens: log.totalTokens,
+              audioSeconds: log.audioSeconds,
+              durationMs: log.durationMs,
+              costUsd: log.costUsd,
+              costBrl: log.costBrl,
+              channel: log.channel,
+              createdAt: log.createdAt,
+            },
+          });
+          imported++;
+        } else {
+          skipped++;
+        }
+      }
+
+      await connectedPrisma.$disconnect();
+
+      loggerService.system(`✨ [Migração] ${imported} registros de telemetria importados da secretaria antiga (${skipped} já existentes).`);
+
+      return reply.send({
+        success: true,
+        message: `Migração concluída com sucesso! ${imported} logs importados, ${skipped} existentes.`,
+        connectedUrl,
+        totalFound: sourceLogs.length,
+        imported,
+        skipped,
+      });
+    } catch (err: any) {
+      if (connectedPrisma) await connectedPrisma.$disconnect().catch(() => {});
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
 }
 
