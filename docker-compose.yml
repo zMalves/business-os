@@ -1,0 +1,85 @@
+services:
+  business-os-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ${CONTAINER_NAME:-business-os-app}
+    restart: unless-stopped
+    user: "0:0" # Roda com permissão de root (777)
+    ports:
+      - "${PORT:-4017}:${PORT:-4017}"
+    volumes:
+      # Sincronização em tempo real do código (Live-Reload no git pull)
+      - .:/app
+      # Protege os binários Linux do node_modules dentro do container
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=${PORT:-4017}
+      - HOST=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL:-mysql://business_user:business_pass@business-os-mariadb:3306/business_os_db}
+      - AI_PROVIDER=${AI_PROVIDER:-deepseek}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://192.168.18.82:8082}
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-victoria_master_secret_2026}
+      - EVOLUTION_INSTANCE_NAME=${EVOLUTION_INSTANCE_NAME:-victoria}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-https://b-os.malves.dev.br}
+      - WHATSAPP_ALLOWED_NUMBERS=${WHATSAPP_ALLOWED_NUMBERS:-5541995852423,554195852423,+5541995852423}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://b-os.malves.dev.br/api/auth/google/callback}
+      - DEPLOY_KEY=${DEPLOY_KEY:-business_master_secret_2026}
+    networks:
+      - business-os-net
+    depends_on:
+      - business-os-mariadb
+
+  business-os-mariadb:
+    image: mariadb:11.4
+    container_name: ${MARIADB_CONTAINER_NAME:-business-os-mariadb}
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_pass}
+      MYSQL_DATABASE: business_os_db
+      MYSQL_USER: business_user
+      MYSQL_PASSWORD: business_pass
+    ports:
+      - "${MARIADB_PORT:-3317}:3306"
+    volumes:
+      - business_os_mariadb_data:/var/lib/mysql
+    networks:
+      business-os-net:
+        aliases:
+          - business-os-mariadb
+          - mariadb
+          - mariadb-dev
+
+  business-os-phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ${PHPMYADMIN_CONTAINER_NAME:-business-os-phpmyadmin}
+    restart: unless-stopped
+    environment:
+      PMA_HOST: business-os-mariadb
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_pass}
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "${PHPMYADMIN_PORT:-8097}:80"
+    networks:
+      - business-os-net
+    depends_on:
+      - business-os-mariadb
+
+volumes:
+  business_os_mariadb_data:
+    driver: local
+
+networks:
+  business-os-net:
+    driver: bridge

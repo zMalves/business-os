@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secretary AI Agent</title>
+  <meta name="description" content="Secretary AI Agent - Assistente Executiva Inteligente, Gestão de Tarefas e Memória Contínua.">
+  <meta name="google-site-verification" content="xy38c0CB1TqO-uDUyH02cX8TKALbv9dYTBUgTAU3pn0" />
+  
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css?v=20260928_1955">
+  
+  <script>
+    window.handleLogout = async function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      try {
+        localStorage.removeItem('secretary_token');
+        sessionStorage.clear();
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (err) {
+        console.error('Logout error:', err);
+      } finally {
+        localStorage.removeItem('secretary_token');
+        document.cookie = "secretary_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = '/login';
+      }
+    };
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <a href="/home" style="text-decoration: none; color: inherit;" title="Conhecer Secretary AI Agent">
+          <div class="brand-text">
+            <h1 style="font-size: 1.05rem; font-weight: 700; margin: 0;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-cyprus); margin-right: 6px;"></i> Secretary AI Agent</h1>
+            <span class="brand-subtitle">Assistente Executiva</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="chat">
+          <i class="fa-solid fa-comments"></i>
+          <span>Chat Executivo</span>
+        </button>
+        <button class="nav-item" data-tab="tasks">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Agenda & Tarefas</span>
+          <span class="counter" id="task-counter">0</span>
+        </button>
+        <button class="nav-item" data-tab="memories">
+          <i class="fa-solid fa-brain"></i>
+          <span>Memória & Fatos</span>
+        </button>
+        <button class="nav-item" data-tab="ai-hub">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Uso & Gastos de IA</span>
+        </button>
+        <button class="nav-item" data-tab="meta-business">
+          <i class="fa-brands fa-meta" style="color: #0081FB;"></i>
+          <span>Meta Business</span>
+        </button>
+        <button class="nav-item" data-tab="logs">
+          <i class="fa-solid fa-terminal"></i>
+          <span>Logs do Sistema</span>
+          <span class="counter" id="logs-counter">0</span>
+        </button>
+        <button class="nav-item" data-tab="system">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Configurações</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-badge" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--color-sand-muted); border-radius: var(--radius-sm); margin-bottom: 8px; border: 1px solid var(--color-sand-border);">
+          <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-cyprus); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <div style="font-size: 0.78rem; font-weight: 600; color: var(--color-ink);" id="current-user-name">Maychel Alves</div>
+              <div style="font-size: 0.68rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis;" id="current-user-email">maychel.alvesz@gmail.com</div>
+            </div>
+          </div>
+          <button id="btn-logout-sidebar" onclick="handleLogout(event)" title="Encerrar Sessão" style="background: none; border: none; color: var(--color-coral); cursor: pointer; padding: 5px 7px; border-radius: 4px; font-size: 0.85rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(231,111,81,0.15)'" onmouseout="this.style.background='none'">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+
+        <div style="font-size: 0.72rem; color: var(--text-dim); display: flex; gap: 6px; justify-content: center; padding-top: 4px;">
+          <a href="/home" style="color: var(--text-muted); text-decoration: none;">Início</a> •
+          <a href="/privacy" style="color: var(--text-muted); text-decoration: none;">Privacidade</a> •
+          <a href="/terms" style="color: var(--text-muted); text-decoration: none;">Termos</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="page-title">
+          <h1 id="tab-heading">Chat com a Secretária</h1>
+          <p id="tab-subheading">Converse em tempo real e teste comandos de agendamento e memória.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="topbar-icon-btn btn-new-chat" id="btn-new-chat" title="Nova Conversa">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <button class="topbar-icon-btn btn-wa" id="btn-whatsapp-header" title="WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span class="status-indicator-dot" id="wa-header-dot"></span>
+          </button>
+          <button class="topbar-icon-btn btn-google" id="btn-google-header" title="Google Workspace (Calendar, Meet, Contatos)">
+            <i class="fa-brands fa-google"></i>
+            <span class="status-indicator-dot" id="google-header-dot"></span>
+          </button>
+          <button class="topbar-icon-btn btn-refresh" id="btn-refresh" title="Atualizar dados">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+          <button id="btn-logout-top" class="topbar-icon-btn btn-logout-top" onclick="handleLogout(event)" title="Encerrar Sessão (Sair)" style="color: var(--color-coral);">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: Chat Interativo -->
+      <section class="tab-panel active" id="tab-chat">
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <!-- Mensagem de Boas-vindas Inicial -->
+            <div class="message-bubble message-assistant">
+              <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+              <div class="bubble-body">
+                <div class="bubble-header">
+                  <strong>Victoria</strong>
+                  <small>Agora</small>
+                </div>
+                <div class="bubble-content">
+                  <p>Olá! Sou a <strong>Victoria</strong>, sua Secretária Executiva pessoal.</p>
+                  <p>Como posso ajudar você com seus compromissos, contatos e tarefas hoje?</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Area -->
+          <div class="chat-input-wrapper">
+            <form id="chat-form" class="chat-form">
+              <textarea 
+                id="chat-input" 
+                rows="1" 
+                placeholder="Digite sua mensagem para a secretária... (Pressione Enter para enviar)"
+                required
+              ></textarea>
+              <button type="submit" class="btn btn-primary btn-send" id="btn-send">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Agenda & Tarefas -->
+      <section class="tab-panel" id="tab-tasks">
+        <div class="panel-header-actions">
+          <div class="filters">
+            <button class="filter-btn active" data-filter="ALL">Todas</button>
+            <button class="filter-btn" data-filter="PENDING">Pendentes</button>
+            <button class="filter-btn" data-filter="COMPLETED">Concluídas</button>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-new-task">
+            <i class="fa-solid fa-plus"></i> Nova Tarefa
+          </button>
+        </div>
+
+        <div class="tasks-grid" id="tasks-grid">
+          <!-- Carregado via JS -->
+        </div>
+
+        <!-- Seção de Crons & Automações -->
+        <div class="crons-section">
+          <div class="crons-section-header">
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: #818CF8;"></i> Rotinas & Crons Automáticos
+              </h3>
+              <p style="font-size: 0.84rem; color: var(--text-dim); margin-top: 2px;">
+                Tarefas agendadas e briefings matinais enviados automaticamente no seu WhatsApp.
+              </p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-new-cron" onclick="openModal('modal-cron')">
+              <i class="fa-solid fa-plus"></i> Nova Rotina
+            </button>
+          </div>
+
+          <div class="crons-grid" id="crons-grid">
+            <!-- Carregado via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Memória de Longo Prazo -->
+      <section class="tab-panel" id="tab-memories">
+        <div class="panel-header-actions">
+          <p class="description-text">
+            Fatos e informações que a IA utiliza para personalizar o contexto e lembrar suas preferências.
+          </p>
+          <button class="btn btn-primary btn-sm" id="btn-new-memory">
+            <i class="fa-solid fa-plus"></i> Adicionar Memória
+          </button>
+        </div>
+
+        <div class="memories-grid" id="memories-grid">
+          <!-- Carregado via JS -->
+        </div>
+      </section>
+
+      <!-- TAB 4: Uso & Gastos de IA -->
+      <section class="tab-panel" id="tab-ai-hub">
+        <!-- 4 Ultra-Premium FinOps KPI Cards -->
+        <div class="finops-kpi-grid">
+          <!-- Card 1: Gasto Total -->
+          <div class="finops-card card-gold">
+            <div class="finops-card-top">
+              <h4>Gasto Total Estimado</h4>
+              <div class="finops-icon icon-gold">
+                <i class="fa-solid fa-dollar-sign"></i>
+              </div>
+            </div>
+            <div>
+              <div class="finops-val-hero val-gold" id="stat-total-cost-usd">$0.00000 USD</div>
+              <div class="finops-sub-detail">
+                <i class="fa-solid fa-globe"></i>
+                <span id="stat-total-cost-sub">Total acumulado em Dólar</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Tokens Totais -->
+          <div class="finops-card card-violet">
+            <div class="finops-card-top">
+              <h4>Tokens Processados</h4>
+              <div class="finops-icon icon-violet">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+            </div>
+            <div>
+              <div class="finops-val-hero val-violet" id="stat-total-tokens">0</div>
+              <div class="finops-sub-detail" id="stat-tokens-breakdown">
+                Entrada: 0 • Saída: 0
+              </div>
+            </div>
+            <div class="ratio-meter">
+              <div class="ratio-bar">
+                <div class="ratio-fill-in" id="ratio-bar-in" style="width: 50%;"></div>
+                <div class="ratio-fill-out" id="ratio-bar-out" style="width: 50%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Áudios Whisper -->
+          <div class="finops-card card-emerald">
+            <div class="finops-card-top">
+              <h4>Transcrição de Voz</h4>
+              <div class="finops-icon icon-emerald">
+                <i class="fa-solid fa-microphone-lines"></i>
+              </div>
+            </div>
+            <div>
+              <div class="finops-val-hero val-emerald" id="stat-total-audios">0 áudios</div>
+              <div class="finops-sub-detail">
+                <i class="fa-regular fa-clock"></i>
+                <span id="stat-audio-minutes">0.0 min de voz</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Total de Requisições -->
+          <div class="finops-card card-cyan">
+            <div class="finops-card-top">
+              <h4>Total de Requisições</h4>
+              <div class="finops-icon icon-cyan">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+            </div>
+            <div>
+              <div class="finops-val-hero val-cyan" id="stat-total-requests">0</div>
+              <div class="finops-sub-detail" id="stat-requests-breakdown">
+                Chat: 0 • Áudio: 0
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Analytics Section: Onde gasta mais & Modelos -->
+        <div class="finops-analytics-row">
+          <!-- Coluna 1: Onde você gasta mais (Por Categoria) -->
+          <div class="finops-panel-box">
+            <div class="finops-panel-box-header">
+              <div>
+                <h3><i class="fa-solid fa-chart-pie" style="color: #F59E0B;"></i> Gastos por Categoria</h3>
+                <p>Onde a IA consome mais recursos e ferramentas</p>
+              </div>
+              <span class="badge-model"><i class="fa-solid fa-fire"></i> Distribuição</span>
+            </div>
+            <div class="category-progress-list" id="categories-usage-grid">
+              <!-- Carregado via JS -->
+            </div>
+          </div>
+
+          <!-- Coluna 2: Modelos & Provedores de IA -->
+          <div class="finops-panel-box">
+            <div class="finops-panel-box-header">
+              <div>
+                <h3><i class="fa-solid fa-microchip" style="color: #818CF8;"></i> Modelos & Provedores</h3>
+                <p>Desempenho e custos por arquitetura de LLM/STT</p>
+              </div>
+              <span class="badge-model"><i class="fa-solid fa-server"></i> Ativos</span>
+            </div>
+            <div class="models-list-stack" id="models-usage-grid">
+              <!-- Carregado via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Ranking: Top Requisições & Perguntas Mais Caras -->
+        <div class="finops-table-container">
+          <div class="finops-table-header">
+            <div>
+              <h3><i class="fa-solid fa-ranking-star" style="color: #FBBF24;"></i> Maiores Gastos por Solicitação / Pergunta</h3>
+              <p style="color: var(--text-dim); font-size: 0.8rem; margin: 2px 0 0 0;">Agrupamento consolidado de todas as etapas, buscas e chamadas gastas para cada pedido</p>
+            </div>
+            <span class="currency-pill"><i class="fa-solid fa-trophy"></i> Top Consumos</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="finops-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">Rank</th>
+                  <th>Solicitação do Usuário</th>
+                  <th>Categoria</th>
+                  <th>Origem</th>
+                  <th>Etapas</th>
+                  <th>Tokens</th>
+                  <th style="text-align: right;">Custo Estimado</th>
+                </tr>
+              </thead>
+              <tbody id="top-interactions-body">
+                <tr>
+                  <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-dim);">
+                    Nenhuma solicitação agrupada registrada ainda.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Telemetria: Extrato Detalhado de Chamadas -->
+        <div class="finops-table-container">
+          <div class="finops-table-header">
+            <div>
+              <h3><i class="fa-solid fa-receipt" style="color: #34D399;"></i> Extrato Detalhado de Chamadas (Telemetria)</h3>
+              <p style="color: var(--text-dim); font-size: 0.8rem; margin: 2px 0 0 0;">Histórico granular de cada transação de IA em milissegundos</p>
+            </div>
+            <div class="table-filter-pills" id="log-filter-pills">
+              <button class="table-pill-btn active" data-log-filter="ALL">Todas</button>
+              <button class="table-pill-btn" data-log-filter="chat">Chat LLM</button>
+              <button class="table-pill-btn" data-log-filter="transcription">Áudio STT</button>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="finops-table" id="usage-logs-table">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Modelo & Provedor</th>
+                  <th>Operação</th>
+                  <th>Canal</th>
+                  <th>Consumo</th>
+                  <th>Latência</th>
+                  <th style="text-align: right;">Custo</th>
+                </tr>
+              </thead>
+              <tbody id="usage-logs-body">
+                <tr>
+                  <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-dim);">
+                    Nenhum registro de uso ainda. Envie uma mensagem ou áudio para começar a monitorar.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: Status do Sistema & Configurações -->
+      <section class="tab-panel" id="tab-system">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon icon-purple"><i class="fa-solid fa-microchip"></i></div>
+            <div class="stat-content">
+              <h3>Modelo de IA</h3>
+              <p class="stat-value" id="sys-model">DeepSeek-V4-Flash</p>
+              <small class="stat-detail">Provedor Ativo</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon icon-emerald"><i class="fa-solid fa-database"></i></div>
+            <div class="stat-content">
+              <h3>MariaDB</h3>
+              <p class="stat-value" id="sys-db">Conectado</p>
+              <small class="stat-detail">Prisma ORM 6.4</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="fa-solid fa-bolt"></i></div>
+            <div class="stat-content">
+              <h3>Framework API</h3>
+              <p class="stat-value">Fastify 5</p>
+              <small class="stat-detail" id="sys-uptime">Uptime: 0s</small>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon icon-amber"><i class="fa-solid fa-code-branch"></i></div>
+            <div class="stat-content">
+              <h3>Branch & Commit</h3>
+              <p class="stat-value" id="sys-branch">
+                <span>sub</span>
+                <span class="commit-badge" id="sys-commit-badge">#d50d714</span>
+              </p>
+              <small class="stat-detail commit-detail" id="sys-commit" title="Commit: -">-</small>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px;">
+          <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">
+            <i class="fa-solid fa-sliders" style="color: #818CF8; margin-right: 6px;"></i> Preferências da Interface
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 12px;">
+            Personalize o que é exibido nas mensagens e no chat com a Victoria.
+          </p>
+
+          <div class="switch-container">
+            <div class="switch-label-group">
+              <strong>Exibir Ferramentas Executadas (Badges de Debug)</strong>
+              <small>Mostra pequenos crachás quando a Victoria aciona ferramentas de WhatsApp, tarefas ou memória.</small>
+            </div>
+            <label class="custom-switch">
+              <input type="checkbox" id="toggle-tool-badges">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: Logs do Sistema em Tempo Real -->
+      <section class="tab-panel" id="tab-logs">
+        <!-- Floating Glass Log Control Bar -->
+        <div class="logs-toolbar-card">
+          <div class="logs-toolbar-row">
+            <!-- Left: Category Pills -->
+            <div class="logs-pills-group" id="logs-category-pills">
+              <button class="log-pill-btn active" data-log-cat="all">
+                <i class="fa-solid fa-list-ul"></i> Todos
+              </button>
+              <button class="log-pill-btn" data-log-cat="whatsapp">
+                <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> WhatsApp
+              </button>
+              <button class="log-pill-btn" data-log-cat="agent">
+                <i class="fa-solid fa-robot" style="color: #818CF8;"></i> Victoria IA
+              </button>
+              <button class="log-pill-btn" data-log-cat="webhook">
+                <i class="fa-solid fa-cloud-arrow-down" style="color: #38BDF8;"></i> Webhooks
+              </button>
+              <button class="log-pill-btn" data-log-cat="deploy">
+                <i class="fa-solid fa-rocket" style="color: #F59E0B;"></i> Deploy
+              </button>
+              <button class="log-pill-btn" data-log-cat="system">
+                <i class="fa-solid fa-server" style="color: #A78BFA;"></i> Sistema
+              </button>
+            </div>
+
+            <!-- Right: Actions & Tools -->
+            <div class="logs-actions-group">
+              <select class="logs-select" id="logs-level-filter">
+                <option value="all">⚡ Todos os Níveis</option>
+                <option value="info">ℹ️ INFO</option>
+                <option value="success">✅ SUCCESS</option>
+                <option value="warn">⚠️ WARN</option>
+                <option value="error">❌ ERROR</option>
+              </select>
+
+              <div class="logs-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="logs-search-input" placeholder="Filtrar eventos..." />
+              </div>
+
+              <button class="btn btn-secondary btn-sm" id="btn-toggle-live-logs" title="Pausar/Retomar fluxo">
+                <span class="live-dot" id="live-logs-dot"></span>
+                <span id="live-logs-label">Ao Vivo</span>
+              </button>
+
+              <button class="btn btn-secondary btn-sm" id="btn-sync-webhook" title="Sincronizar Webhook Evolution">
+                <i class="fa-solid fa-link"></i> Sync Webhook
+              </button>
+
+              <button class="btn btn-secondary btn-sm" id="btn-copy-logs" title="Copiar logs visíveis">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+
+              <button class="btn btn-secondary btn-sm" id="btn-clear-logs" title="Limpar histórico de logs">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Stream Container -->
+        <div class="logs-terminal-frame">
+          <div class="logs-terminal-topbar">
+            <div class="logs-mac-dots">
+              <span class="mac-dot mac-red"></span>
+              <span class="mac-dot mac-yellow"></span>
+              <span class="mac-dot mac-green"></span>
+            </div>
+            <div class="logs-terminal-name">
+              <i class="fa-solid fa-terminal" style="color: #818CF8;"></i> victoria@server:~ (Live Telemetry Stream)
+            </div>
+            <div class="logs-terminal-counter" id="logs-stream-stats">
+              Total: 0 logs
+            </div>
+          </div>
+
+          <div class="logs-terminal-console" id="logs-terminal-body">
+            <div class="logs-empty-state" id="logs-empty-state">
+              <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.6rem; color: #818CF8; margin-bottom: 10px;"></i>
+              <p>Carregando telemetria e registros do servidor...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Meta Business Multi-Cliente -->
+      <section class="tab-panel" id="tab-meta-business">
+        <div class="dashboard-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1; max-width: 420px;">
+            <input type="text" id="meta-client-search" placeholder="Buscar cliente, @insta ou ID..." oninput="filterMetaClients(this.value)" style="width: 100%; padding: 8px 14px; font-size: 0.88rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="openCreateClientModal()">
+              <i class="fa-solid fa-user-plus"></i> Cadastrar Cliente
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid de Clientes -->
+        <div id="meta-clients-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px;">
+          <div style="padding: 32px; border-radius: 12px; border: 1px dashed var(--border-color); color: var(--text-dim); text-align: center; grid-column: 1 / -1;">
+            Nenhum cliente cadastrado. Clique em <strong>"Cadastrar Cliente"</strong> para começar.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Nova Tarefa -->
+  <div class="modal-backdrop" id="modal-task">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Nova Tarefa / Compromisso</h3>
+        <button class="btn-close" onclick="closeModal('modal-task')">&times;</button>
+      </div>
+      <form id="form-new-task">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" id="task-title" placeholder="Ex: Reunião de Planejamento" required>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="task-desc" rows="2" placeholder="Detalhes ou pauta"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data / Hora</label>
+            <input type="datetime-local" id="task-due">
+          </div>
+          <div class="form-group">
+            <label>Prioridade</label>
+            <select id="task-priority">
+              <option value="LOW">Baixa</option>
+              <option value="MEDIUM" selected>Média</option>
+              <option value="HIGH">Alta</option>
+              <option value="URGENT">Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <input type="text" id="task-category" placeholder="Ex: Reunião, Pessoal, Financeiro">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-task')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Tarefa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Nova Memória -->
+  <div class="modal-backdrop" id="modal-memory">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Adicionar Fato na Memória</h3>
+        <button class="btn-close" onclick="closeModal('modal-memory')">&times;</button>
+      </div>
+      <form id="form-new-memory">
+        <div class="form-group">
+          <label>Chave / Identificador</label>
+          <input type="text" id="mem-key" placeholder="Ex: nome_usuario, horario_preferido" required>
+        </div>
+        <div class="form-group">
+          <label>Informação a ser lembrada</label>
+          <textarea id="mem-value" rows="3" placeholder="Ex: Maychel Alves, prefere reuniões após as 14h" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Categoria (opcional)</label>
+          <input type="text" id="mem-category" placeholder="Ex: Preferência, Perfil">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-memory')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar na Memória</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Nova Rotina Automática (Cron) -->
+  <div class="modal-backdrop" id="modal-cron">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(0, 70, 67, 0.10); color: var(--color-cyprus); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">Nova Rotina Automática</h3>
+            <small style="color: var(--text-dim);">Agendamento de mensagens e briefings da Victoria</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-cron')">&times;</button>
+      </div>
+      <form id="form-new-cron">
+        <div class="form-group">
+          <label>Título da Rotina</label>
+          <input type="text" id="cron-title" placeholder="Ex: Briefing Matinal ou Lembrete das 18h" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de Rotina</label>
+            <select id="cron-type" onchange="handleCronTypeChange(this.value)">
+              <option value="DAILY_BRIEFING">Briefing Matinal (Agenda + Tarefas)</option>
+              <option value="CUSTOM_MESSAGE">Mensagem / Lembrete Personalizado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Frequência / Horário</label>
+            <select id="cron-preset" onchange="handleCronPresetChange(this.value)">
+              <option value="0 8 * * *">Todo dia às 08:00 (São Paulo)</option>
+              <option value="0 9 * * 1-5">Seg a Sex às 09:00</option>
+              <option value="0 18 * * 1-5">Seg a Sex às 18:00</option>
+              <option value="0 * * * *">A cada hora</option>
+              <option value="custom">Expressão Cron Personalizada...</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" id="cron-custom-expr-group" style="display: none;">
+          <label>Expressão Cron (Min Hora Dia Mês DiaSemana)</label>
+          <input type="text" id="cron-custom-expr" placeholder="Ex: 30 7 * * *">
+          <small style="color: var(--text-dim); font-size: 0.75rem;">Fuso horário: America/Sao_Paulo (UTC-3)</small>
+        </div>
+        <div class="form-group" id="cron-prompt-group" style="display: none;">
+          <label>Instrução / Pergunta para a Victoria executar</label>
+          <textarea id="cron-prompt" rows="3" placeholder="Ex: Avise o Maychel para verificar o status dos deploys e pagamentos pendentes"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-cron')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Rotina</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Conexão WhatsApp -->
+  <div class="modal-backdrop" id="modal-whatsapp">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(37, 211, 102, 0.15); color: #25D366; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-brands fa-whatsapp"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">WhatsApp da Victoria</h3>
+            <small style="color: var(--text-dim);">Conecte seu WhatsApp à assistente</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-whatsapp')">&times;</button>
+      </div>
+
+      <div style="padding: 20px 0; text-align: center;">
+        <!-- Status Pill -->
+        <div id="wa-status-badge" class="wa-status-badge status-close">
+          <span class="wa-dot"></span>
+          <span id="wa-status-text">Verificando conexão...</span>
+        </div>
+
+        <!-- Container do QR Code -->
+        <div id="wa-qr-wrapper" class="wa-qr-wrapper" style="margin: 20px auto; min-height: 260px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+          <div id="wa-qr-loading" style="display: none; flex-direction: column; align-items: center; gap: 12px; color: var(--text-dim);">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #25D366;"></i>
+            <span>Gerando QR Code...</span>
+          </div>
+
+          <img id="wa-qr-img" src="" alt="QR Code WhatsApp" style="display: none; max-width: 250px; border-radius: 12px; border: 4px solid var(--color-sand-border); background: #fff; padding: 6px; box-shadow: 0 8px 24px rgba(0,70,67,0.15);" />
+
+          <div id="wa-connected-box" style="display: none; flex-direction: column; align-items: center; gap: 12px; padding: 24px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(37,211,102,0.15); color: #25D366; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <strong style="font-size: 1.1rem; color: var(--text-primary);">WhatsApp Pareado e Ativo!</strong>
+            <p style="font-size: 0.88rem; color: var(--text-dim); max-width: 320px; line-height: 1.4;">
+              A Victoria agora responde diretamente aos seus contatos no WhatsApp em tempo real.
+            </p>
+          </div>
+        </div>
+
+        <p id="wa-instructions" style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px; line-height: 1.4; padding: 0 16px;">
+          1. Abra o WhatsApp no seu celular.<br>
+          2. Toque em <strong>Aparelhos Conectados</strong> > <strong>Conectar um aparelho</strong>.<br>
+          3. Aponte a câmera para o QR Code acima.
+        </p>
+
+        <!-- Botões de Ação -->
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-refresh" onclick="refreshWhatsAppQR()">
+            <i class="fa-solid fa-arrows-rotate"></i> Atualizar QR Code
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-webhook" onclick="setupWhatsAppWebhook()">
+            <i class="fa-solid fa-link"></i> Ativar Webhook
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" id="btn-wa-disconnect" style="display: none;" onclick="disconnectWhatsApp()">
+            <i class="fa-solid fa-power-off"></i> Desconectar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Conexão Google Workspace -->
+  <div class="modal-backdrop" id="modal-google">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(66, 133, 244, 0.15); color: #4285F4; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-brands fa-google"></i>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">Google Workspace</h3>
+            <small style="color: var(--text-dim);">Google Calendar, Meet, Contatos & Tasks</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-google')">&times;</button>
+      </div>
+
+      <div style="padding: 20px 0; text-align: center;">
+        <!-- Status Pill -->
+        <div id="google-status-badge" class="wa-status-badge status-close">
+          <span class="wa-dot"></span>
+          <span id="google-status-text">Verificando...</span>
+        </div>
+
+        <div id="google-disconnected-box" style="padding: 24px 16px;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(66, 133, 244, 0.1); color: #4285F4; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px;">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <strong style="font-size: 1.1rem; color: var(--text-primary); display: block; margin-bottom: 8px;">Conecte sua Conta Google</strong>
+          <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 24px;">
+            Ao autorizar sua conta, a Victoria poderá agendar compromissos com link do <strong>Google Meet</strong>, consultar seus horários livres e acessar seus contatos para envio de convites.
+          </p>
+          <a href="/api/auth/google" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 0.95rem; text-decoration: none; background: #4285F4; border-color: #4285F4;">
+            <i class="fa-brands fa-google"></i> Conectar com o Google
+          </a>
+        </div>
+
+        <div id="google-connected-box" style="display: none; padding: 24px 16px;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px;">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <strong style="font-size: 1.1rem; color: var(--text-primary); display: block; margin-bottom: 6px;">Conta Conectada!</strong>
+          <p id="google-connected-email" style="font-size: 0.92rem; color: #38bdf8; font-weight: 500; margin-bottom: 12px;"></p>
+          <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.4; margin-bottom: 24px;">
+            A Victoria já está sincronizada com o seu Google Calendar, Google Meet, Google Tasks e Contatos.
+          </p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <a href="/api/auth/google" class="btn btn-secondary btn-sm" style="text-decoration: none;">
+              <i class="fa-solid fa-arrows-rotate"></i> Reconectar / Trocar
+            </a>
+            <button type="button" class="btn btn-danger btn-sm" onclick="disconnectGoogle()">
+              <i class="fa-solid fa-power-off"></i> Desconectar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cadastrar / Editar Cliente & Vincular Ativos -->
+  <div class="modal-backdrop" id="modal-meta-client">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(16, 185, 129, 0.15); color: #10B981; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-user-gear"></i>
+          </div>
+          <div>
+            <h3 id="modal-client-title" style="margin: 0; font-size: 1.15rem;">Cadastrar Cliente & Vincular Ativos</h3>
+            <small style="color: var(--text-dim);">Configure as contas de anúncios, Instagram e páginas deste cliente</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-meta-client')">&times;</button>
+      </div>
+      <form id="form-new-meta-client" onsubmit="handleSaveMetaClient(event)">
+        <input type="hidden" id="meta-client-edit-id" value="">
+
+        <!-- 1. Dados do Cliente -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome do Cliente / Empresa</label>
+            <input type="text" id="meta-client-name" placeholder="Ex: Clínica Sorriso" required>
+          </div>
+          <div class="form-group">
+            <label>Meta de CPA Máximo (R$)</label>
+            <input type="number" step="0.01" id="meta-client-cpa" placeholder="Ex: 25.00">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Instruções / Contexto para a Victoria</label>
+          <textarea id="meta-client-desc" rows="2" placeholder="Ex: Clínica odontológica focada em implantes. Foco em geração de leads qualificados."></textarea>
+        </div>
+
+        <!-- 2. Perfil de Origem dos Ativos -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="margin: 0;">Perfil Conectado (Origem dos Ativos)</label>
+            <div style="display: flex; gap: 6px;">
+              <a href="/api/auth/meta" id="btn-modal-connect-meta" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 2px 8px; font-size: 0.75rem; color: #0081FB; border-color: rgba(0, 129, 251, 0.3);">
+                <i class="fa-brands fa-facebook"></i> Conectar Meta
+              </a>
+              <a href="/api/auth/instagram" id="btn-modal-connect-ig" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 2px 8px; font-size: 0.75rem; color: #E1306C; border-color: rgba(225, 48, 108, 0.3);">
+                <i class="fa-brands fa-instagram"></i> Conectar Instagram
+              </a>
+            </div>
+          </div>
+          <select id="meta-client-profile" onchange="handleProfileChange(this.value)">
+            <option value="">Selecione um perfil conectado ou conecte acima...</option>
+          </select>
+        </div>
+
+        <!-- 3. Ativos para Conectar -->
+        <div style="background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <strong style="font-size: 0.9rem; color: var(--text-primary); display: block; margin-bottom: 10px;">
+            <i class="fa-solid fa-shapes" style="color: #818CF8;"></i> Escolha os Ativos que deseja vincular a este Cliente:
+          </strong>
+
+          <!-- Ativo 1: Conta de Anúncios -->
+          <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #38bdf8; margin-bottom: 6px;">
+              <input type="checkbox" id="check-asset-ad" onchange="toggleAssetField('ad')">
+              <i class="fa-solid fa-chart-line"></i> Conectar Conta de Anúncios (Meta Ads)
+            </label>
+            <div id="box-asset-ad" style="display: none; margin-top: 6px;">
+              <select id="meta-client-ad-select" style="width: 100%;">
+                <option value="">Selecione a conta de anúncios...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Ativo 2: Instagram -->
+          <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #E1306C; margin-bottom: 6px;">
+              <input type="checkbox" id="check-asset-ig" onchange="toggleAssetField('ig')">
+              <i class="fa-brands fa-instagram"></i> Conectar Perfil do Instagram
+            </label>
+            <div id="box-asset-ig" style="display: none; margin-top: 6px;">
+              <select id="meta-client-ig-select" style="width: 100%;">
+                <option value="">Selecione a conta do Instagram...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Ativo 3: Página do Facebook -->
+          <div>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #0081FB; margin-bottom: 6px;">
+              <input type="checkbox" id="check-asset-fb" onchange="toggleAssetField('fb')">
+              <i class="fa-brands fa-facebook"></i> Conectar Página do Facebook
+            </label>
+            <div id="box-asset-fb" style="display: none; margin-top: 6px;">
+              <select id="meta-client-fb-select" style="width: 100%;">
+                <option value="">Selecione a página do Facebook...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-meta-client')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Visualização e Histórico de Métricas, Campanhas e Criativos -->
+  <div class="modal-backdrop" id="modal-meta-insights">
+    <div class="modal-card" style="max-width: 960px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: rgba(0, 129, 251, 0.15); color: #0081FB; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem;">
+            <i class="fa-brands fa-meta"></i>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 id="modal-insights-title" style="margin: 0; font-size: 1.2rem;">Desempenho de Anúncios</h3>
+              <span id="modal-insights-target-badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 600;">Meta CPA: N/A</span>
+            </div>
+            <small id="modal-insights-subtitle" style="color: var(--text-dim);">Conta: act_...</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-meta-insights')">&times;</button>
+      </div>
+
+      <!-- Barra de Período Histórico -->
+      <div style="padding: 14px 20px 6px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; background: var(--color-sand-light);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="meta-period-bar" id="meta-insights-period-pills" style="margin-bottom: 0;">
+            <button class="meta-period-pill" data-period="today" onclick="selectInsightsPeriod('today')">
+              <i class="fa-regular fa-sun"></i> Hoje
+            </button>
+            <button class="meta-period-pill" data-period="yesterday" onclick="selectInsightsPeriod('yesterday')">
+              <i class="fa-regular fa-calendar"></i> Ontem
+            </button>
+            <button class="meta-period-pill active" data-period="last_7d" onclick="selectInsightsPeriod('last_7d')">
+              <i class="fa-solid fa-chart-line"></i> Últimos 7 Dias
+            </button>
+            <button class="meta-period-pill" data-period="last_14d" onclick="selectInsightsPeriod('last_14d')">
+              <i class="fa-regular fa-calendar-days"></i> 14 Dias
+            </button>
+            <button class="meta-period-pill" data-period="last_30d" onclick="selectInsightsPeriod('last_30d')">
+              <i class="fa-regular fa-calendar-check"></i> 30 Dias
+            </button>
+            <button class="meta-period-pill" data-period="this_month" onclick="selectInsightsPeriod('this_month')">
+              <i class="fa-solid fa-calendar-day"></i> Este Mês
+            </button>
+            <button class="meta-period-pill" data-period="last_month" onclick="selectInsightsPeriod('last_month')">
+              <i class="fa-solid fa-calendar-minus"></i> Mês Passado
+            </button>
+            <button class="meta-period-pill" data-period="maximum" onclick="selectInsightsPeriod('maximum')">
+              <i class="fa-solid fa-infinity"></i> Vitalício
+            </button>
+          </div>
+
+          <!-- Botão Recarregar -->
+          <button class="btn btn-secondary btn-sm" onclick="reloadActiveMetaInsightsTab()" title="Recarregar Dados da Meta">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sub-Abas de Navegação -->
+      <div style="padding: 12px 20px 0; flex-shrink: 0;">
+        <div class="meta-subtabs-nav">
+          <button class="meta-subtab-btn active" id="meta-subtab-btn-overview" onclick="switchMetaInsightsSubtab('overview')">
+            <i class="fa-solid fa-chart-pie"></i> Visão Geral
+          </button>
+          <button class="meta-subtab-btn" id="meta-subtab-btn-campaigns" onclick="switchMetaInsightsSubtab('campaigns')">
+            <i class="fa-solid fa-bullseye"></i> Campanhas <span class="counter" id="meta-camp-count" style="font-size: 0.7rem; padding: 1px 6px;">0</span>
+          </button>
+          <button class="meta-subtab-btn" id="meta-subtab-btn-creatives" onclick="switchMetaInsightsSubtab('creatives')">
+            <i class="fa-solid fa-photo-film"></i> Criativos & Anúncios <span class="counter" id="meta-creative-count" style="font-size: 0.7rem; padding: 1px 6px;">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Conteúdo das Abas (Scrollável) -->
+      <div style="padding: 10px 20px 20px; overflow-y: auto; flex: 1;">
+        
+        <!-- SUB-ABA 1: Visão Geral -->
+        <div id="meta-subtab-pane-overview">
+          <div id="modal-insights-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-trophy"></i> Top Campanhas no Período
+              </h4>
+              <div id="modal-overview-top-campaigns" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Preenchido via JS -->
+              </div>
+            </div>
+
+            <div style="background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px;">
+              <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: #10B981; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-star"></i> Melhores Criativos em Leads
+              </h4>
+              <div id="modal-overview-top-creatives" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Preenchido via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-ABA 2: Campanhas Detalhadas -->
+        <div id="meta-subtab-pane-campaigns" style="display: none;">
+          <div class="meta-camp-table-wrapper">
+            <table class="meta-camp-table">
+              <thead>
+                <tr>
+                  <th>Campanha</th>
+                  <th>Status</th>
+                  <th>Orçamento</th>
+                  <th>Investimento</th>
+                  <th>Leads</th>
+                  <th>CPA / CPL</th>
+                  <th>Cliques (CTR)</th>
+                  <th>ROAS</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="modal-campaigns-tbody">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUB-ABA 3: Criativos & Anúncios -->
+        <div id="meta-subtab-pane-creatives" style="display: none;">
+          <!-- Filtro de Campanha para Criativos -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;">
+              <select id="meta-creative-campaign-filter" onchange="handleCreativeCampaignFilter(this.value)" style="padding: 6px 12px; font-size: 0.85rem;">
+                <option value="">Todas as Campanhas</option>
+              </select>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-dim);" id="meta-creative-summary-info">
+              Exibindo todos os criativos
+            </div>
+          </div>
+
+          <div class="meta-creatives-grid" id="modal-creatives-grid">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Standardized Toast Notifications Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="app.js?v=20260928_1955"></script>
+</body>
+</html>

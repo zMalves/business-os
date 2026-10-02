@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secretary AI Agent by Malves — Assistente Executiva e Produtividade</title>
+  <meta name="description" content="Secretary AI Agent by Malves é uma assistente executiva inteligente para gerenciamento de agenda, tarefas e automação corporativa da organização Malves.">
+  <meta name="google-site-verification" content="xy38c0CB1TqO-uDUyH02cX8TKALbv9dYTBUgTAU3pn0" />
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-main: #F0EDE5;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8F6F1;
+      --border-color: #D8D2C5;
+      --text-main: #091B1A;
+      --text-muted: #3B5855;
+      --text-dim: #708A87;
+      --primary: #004643;
+      --primary-hover: #003330;
+      --primary-glow: rgba(0, 70, 67, 0.20);
+      --blue: #005F5B;
+      --emerald: #2EC4B6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border-color);
+      padding: 20px 0;
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      background: rgba(240, 237, 229, 0.85);
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #F0EDE5;
+      font-size: 1.15rem;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .brand-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .btn-login {
+      background: var(--primary);
+      color: #F0EDE5 !important;
+      padding: 9px 20px;
+      border-radius: 9999px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px var(--primary-glow);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-login:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px var(--primary-glow);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 70px 0 50px;
+      text-align: center;
+    }
+
+    .badge-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(0, 70, 67, 0.08);
+      border: 1px solid rgba(0, 70, 67, 0.2);
+      border-radius: 9999px;
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      color: var(--text-main);
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 36px;
+    }
+
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--primary);
+      color: #F0EDE5;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      box-shadow: 0 6px 18px var(--primary-glow);
+      transition: transform 0.2s;
+    }
+
+    .btn-primary-cta:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      color: var(--primary);
+      text-decoration: none;
+      padding: 14px 24px;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: background 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 70, 67, 0.05);
+    }
+
+    .btn-secondary-cta:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--primary);
+    }
+
+    /* Purpose Section (Obrigatorio pelo Google) */
+    .section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 40px;
+      max-width: 700px;
+    }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(0, 70, 67, 0.08);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+    }
+
+    .card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Scope Transparency Section */
+    .scope-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-top: 30px;
+      box-shadow: 0 4px 16px rgba(0, 70, 67, 0.05);
+    }
+
+    .scope-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .scope-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .scope-check {
+      color: var(--emerald);
+      font-size: 1.2rem;
+      margin-top: 2px;
+    }
+
+    .scope-item strong {
+      display: block;
+      color: var(--text-main);
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+
+    .scope-item span {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 40px 0;
+      background: var(--bg-card-hover);
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--blue);
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .header-content { flex-direction: column; gap: 16px; }
+      .footer-content { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container header-content">
+      <a href="/home" class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="brand-name">Secretary AI Agent by Malves</div>
+      </a>
+      <nav class="nav-links">
+        <a href="/home">Início</a>
+        <a href="#finalidade">Finalidade</a>
+        <a href="#integracoes">Integrações</a>
+        <a href="/privacy">Privacidade</a>
+        <a href="/terms">Termos</a>
+        <a href="/" class="btn-login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar Painel</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="container">
+    <section class="hero">
+      <div class="badge-hero">
+        <i class="fa-solid fa-shield-halved"></i> Plataforma Oficial da Organização Malves
+      </div>
+      <h1>Secretary AI Agent by Malves</h1>
+      <p>
+        Assistente Executiva Inteligente desenvolvida para automação de rotinas corporativas, gestão integrada de agenda, organização de pendências e produtividade executiva.
+      </p>
+      <div class="cta-group">
+        <a href="/" class="btn-primary-cta">
+          <i class="fa-solid fa-table-columns"></i> Abrir Painel Executivo
+        </a>
+        <a href="#finalidade" class="btn-secondary-cta">
+          <i class="fa-solid fa-circle-info"></i> Conhecer Finalidade
+        </a>
+      </div>
+    </section>
+
+    <!-- Finalidade do Aplicativo (Exigência do Google) -->
+    <section class="section" id="finalidade">
+      <h2 class="section-title">Finalidade do Aplicativo</h2>
+      <p class="section-subtitle">
+        O <strong>Secretary AI Agent by Malves</strong> foi concebido exclusivamente para servir como o centro de comando executivo da <strong>Malves</strong>, operando como suporte direto nas atividades diárias de gestão e agendamento.
+      </p>
+
+      <div class="grid-cards">
+        <div class="card">
+          <div class="card-icon"><i class="fa-solid fa-calendar-check"></i></div>
+          <h3>Gestão de Compromissos</h3>
+          <p>
+            Permite consultar a grade de horários livres, cadastrar reuniões executivas e gerar links automáticos de videoconferência do Google Meet para os participantes.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fa-solid fa-list-check"></i></div>
+          <h3>Central de Tarefas</h3>
+          <p>
+            Organiza compromissos operacionais e listas de tarefas diárias em tempo real, integrando prazos e prioridades corporativas diretamente no ecossistema de trabalho.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fa-solid fa-robot"></i></div>
+          <h3>Assistência em Linguagem Natural</h3>
+          <p>
+            Capacidade de interpretar instruções executivas em linguagem natural, automatizando a leitura de resumos executivos, notificações e confirmações de presença.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transparência nas Integrações do Google Workspace -->
+    <section class="section" id="integracoes">
+      <h2 class="section-title">Uso das Integrações Google Workspace</h2>
+      <p class="section-subtitle">
+        O Secretary AI Agent by Malves utiliza protocolos OAuth 2.0 seguros para se conectar aos serviços do Google Workspace apenas com as permissões estritamente necessárias:
+      </p>
+
+      <div class="scope-box">
+        <div class="scope-item">
+          <div class="scope-check"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <strong>Google Calendar API</strong>
+            <span>Utilizada unicamente para verificar conflitos de agenda e inserir os eventos e reuniões que você solicita explicitamente à assistente.</span>
+          </div>
+        </div>
+
+        <div class="scope-item">
+          <div class="scope-check"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <strong>Google Tasks API</strong>
+            <span>Utilizada para listar suas tarefas pendentes de hoje e dos próximos dias, além de marcar afazeres como concluídos a seu pedido.</span>
+          </div>
+        </div>
+
+        <div class="scope-item">
+          <div class="scope-check"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <strong>Gmail API</strong>
+            <span>Utilizada exclusivamente para leitura de e-mails importantes selecionados e envio de convites ou notas de reuniões autorizadas pelo usuário.</span>
+          </div>
+        </div>
+
+        <div class="scope-item">
+          <div class="scope-check"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <strong>Privacidade Absoluta</strong>
+            <span>Seus dados nunca são comercializados, compartilhados com terceiros nem usados para treinamento público de inteligência artificial.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <div>
+        <strong>Secretary AI Agent by Malves</strong> &copy; 2026. Desenvolvido para <strong>malves.dev.br</strong>. Todos os direitos reservados.
+      </div>
+      <div class="footer-links">
+        <a href="/home">Página Inicial</a>
+        <a href="/privacy">Política de Privacidade</a>
+        <a href="/terms">Termos de Serviço</a>
+        <a href="mailto:maychel.alvesz@gmail.com">Suporte / Contato</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

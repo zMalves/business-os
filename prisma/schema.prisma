@@ -1,0 +1,247 @@
+// Prisma Schema para Secretaria IA (MariaDB)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Conversation {
+  id         String    @id @default(cuid())
+  externalId String?   // Ex: número de telefone do WhatsApp ou ID do usuário
+  channel    String    @default("web") // "web", "whatsapp", "telegram", etc.
+  title      String?   @db.VarChar(255)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  messages   Message[]
+
+  @@index([externalId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String       @db.Text
+  metadata       Json?        // Armazena chamadas de tool, payloads extras ou dados de debug
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String       @db.VarChar(255)
+  description String?      @db.Text
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  category    String?      @db.VarChar(100) // Ex: "Reunião", "Lembrete", "Financeiro", "Secretaria"
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model Memory {
+  id        String   @id @default(cuid())
+  key       String   @unique @db.VarChar(191) // Ex: "user_name", "business_hours", "preferred_language"
+  value     String   @db.Text
+  category  String?  @db.VarChar(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("memories")
+}
+
+model AiUsageLog {
+  id               String   @id @default(cuid())
+  interactionId    String?  @db.VarChar(100) // Agrupa todas as etapas de uma mesma mensagem/ação
+  provider         String   @db.VarChar(50)  // "deepseek", "openai", "gemini"
+  model            String   @db.VarChar(100) // "deepseek-v4-flash", "whisper-1", "gpt-4o-mini"
+  operationType    String   @db.VarChar(50)  // "chat", "transcription", "tool_loop"
+  category         String?  @db.VarChar(50)  // "web_search", "web_read", "tasks_agenda", "whatsapp_tools", "audio_transcription", "general_chat"
+  promptSummary    String?  @db.VarChar(255) // Resumo da solicitação do usuário
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  audioSeconds     Float    @default(0)
+  costUsd          Float    @default(0)
+  costBrl          Float    @default(0)
+  durationMs       Int      @default(0)
+  channel          String?  @db.VarChar(50)  // "whatsapp_group", "web"
+  createdAt        DateTime @default(now())
+
+  @@index([provider])
+  @@index([interactionId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("ai_usage_logs")
+}
+
+model GoogleAuth {
+  id           String   @id @default("default")
+  email        String?  @db.VarChar(255)
+  accessToken  String   @db.Text
+  refreshToken String?  @db.Text
+  tokenType    String?  @default("Bearer") @db.VarChar(50)
+  scope        String?  @db.Text
+  expiryDate   BigInt?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("google_auth")
+}
+
+model ScheduledJob {
+  id           String    @id @default(cuid())
+  title        String    @db.VarChar(255)
+  cronExpr     String    @db.VarChar(100) // Ex: "08:00" ou "0 8 * * *" ou "every 30m"
+  timezone     String    @default("America/Sao_Paulo") @db.VarChar(50)
+  targetNumber String?   @db.VarChar(50)  // Destinatário WhatsApp (ex: +5541995852423)
+  actionType   String    @default("daily_briefing") @db.VarChar(50) // "daily_briefing", "custom_prompt", "calendar_reminder"
+  prompt       String?   @db.Text         // Prompt executivo ou instrução para a Victoria
+  isActive     Boolean   @default(true)
+  lastRunAt    DateTime?
+  nextRunAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive])
+  @@map("scheduled_jobs")
+}
+
+model DynamicSkill {
+  id               String                  @id @default(cuid())
+  name             String                  @unique @db.VarChar(100) // Identificador slug, ex: "fechamento_semanal_vendas"
+  displayName      String                  @db.VarChar(255)         // Ex: "Relatório de Fechamento Semanal de Vendas"
+  description      String                  @db.Text                 // Descrição funcional para o LLM e Tool Gating
+  triggerExamples  Json?                                            // Array de strings com exemplos de mensagens que disparam esta skill
+  parametersSchema Json?                                            // JSON Schema dos argumentos aceitos
+  workflow         Json                                             // Lista estruturada de passos a serem executados
+  isActive         Boolean                 @default(true)
+  isDraft          Boolean                 @default(false)          // True se estiver pendente de teste ou aprovação
+  testResult       Json?                                            // Último resultado de dry-run
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  executions       DynamicSkillExecution[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("dynamic_skills")
+}
+
+model DynamicSkillExecution {
+  id           String       @id @default(cuid())
+  skillId      String
+  inputArgs    Json?
+  outputResult Json?
+  status       String       @default("SUCCESS") @db.VarChar(50) // "SUCCESS", "FAILED", "RUNNING"
+  error        String?      @db.Text
+  durationMs   Int          @default(0)
+  createdAt    DateTime     @default(now())
+
+  skill        DynamicSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([skillId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("dynamic_skill_executions")
+}
+
+model MetaProfile {
+  id              String       @id @default(cuid())
+  provider        String       @default("meta") @db.VarChar(50) // "meta" ou "instagram"
+  externalUserId  String?      @db.VarChar(100)                // ID do usuário na Meta
+  name            String       @db.VarChar(255)                // Nome do perfil conectado (ex: "Maychel Alves")
+  email           String?      @db.VarChar(255)
+  avatarUrl       String?      @db.Text
+  accessToken     String       @db.Text                        // Long-Lived Access Token (60 dias) ou System Token
+  tokenExpiresAt  DateTime?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  clients         MetaClient[]
+
+  @@map("meta_profiles")
+}
+
+model MetaClient {
+  id                     String       @id @default(cuid())
+  profileId              String?
+  name                   String       @db.VarChar(255) // Ex: "Clínica Sorriso", "E-commerce Alpha"
+  slug                   String       @unique @db.VarChar(100)
+  description            String?      @db.Text         // Contexto de negócio para a IA
+  
+  // Ativos Conectados
+  connectedAssets        Json?                         // ['ad_account', 'instagram', 'facebook']
+  bmId                   String?      @db.VarChar(100)
+  bmName                 String?      @db.VarChar(255)
+  adAccountId            String?      @db.VarChar(100) // Ex: "act_1234567890"
+  adAccountName          String?      @db.VarChar(255)
+  facebookPageId         String?      @db.VarChar(100)
+  facebookPageName       String?      @db.VarChar(255)
+  facebookPageToken      String?      @db.Text
+  instagramAccountId     String?      @db.VarChar(100)
+  instagramUsername      String?      @db.VarChar(100) // Ex: "@clinicasorriso"
+  
+  // Metas e alertas de tráfego
+  currency               String       @default("BRL") @db.VarChar(10)
+  targetCpa              Float?
+  dailyBudgetLimit       Float?
+  isActive               Boolean      @default(true)
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  profile                MetaProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([profileId])
+  @@index([adAccountId])
+  @@index([instagramAccountId])
+  @@map("meta_clients")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique @db.VarChar(191)
+  name      String?  @db.VarChar(255)
+  password  String   @db.VarChar(255) // bcrypt hash
+  role      String   @default("admin") @db.VarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
