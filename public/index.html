@@ -74,6 +74,10 @@
           <i class="fa-solid fa-network-wired"></i>
           <span>Webhooks</span>
         </button>
+        <button class="nav-item" data-tab="crons">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Crons</span>
+        </button>
 
         <div class="nav-menu-spacer" style="margin-top: auto;"></div>
 
@@ -418,26 +422,26 @@
         <div class="tasks-grid" id="tasks-grid">
           <!-- Carregado via JS -->
         </div>
+      </section>
 
-        <!-- Seção de Crons & Automações -->
-        <div class="crons-section">
-          <div class="crons-section-header">
-            <div>
-              <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-clock-rotate-left" style="color: #818CF8;"></i> Rotinas & Crons Automáticos
-              </h3>
-              <p style="font-size: 0.84rem; color: var(--text-dim); margin-top: 2px;">
-                Tarefas agendadas e briefings matinais enviados automaticamente no seu WhatsApp.
-              </p>
-            </div>
-            <button class="btn btn-primary btn-sm" id="btn-new-cron" onclick="openModal('modal-cron')">
-              <i class="fa-solid fa-plus"></i> Nova Rotina
-            </button>
+      <!-- TAB: Rotinas & Crons Automáticos -->
+      <section class="tab-panel" id="tab-crons">
+        <div class="panel-header-actions">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-clock-rotate-left"></i> Rotinas & Crons Automáticos
+            </h3>
+            <p style="font-size: 0.84rem; color: var(--color-slate); margin-top: 2px;">
+              Tarefas agendadas e briefings matinais enviados automaticamente no seu WhatsApp.
+            </p>
           </div>
+          <button class="btn btn-primary btn-sm" id="btn-new-cron" onclick="openModal('modal-cron')">
+            <i class="fa-solid fa-plus"></i> Nova Rotina
+          </button>
+        </div>
 
-          <div class="crons-grid" id="crons-grid">
-            <!-- Carregado via JS -->
-          </div>
+        <div class="crons-grid" id="crons-grid" style="margin-top: 16px;">
+          <!-- Carregado via JS -->
         </div>
       </section>
 

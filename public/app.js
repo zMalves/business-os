@@ -27,6 +27,7 @@ const tabTitles = {
   tasks: { title: 'Tarefas & Agenda', sub: 'Acompanhe compromissos, Google Calendar, Meet e pendências.' },
   skills: { title: 'Dynamic Skills Engine', sub: 'Catálogo de habilidades compostas e rotinas operacionais autônomas.' },
   webhooks: { title: 'Webhooks & Hub de Eventos', sub: 'Gerenciamento de eventos externos e integrações de automação.' },
+  crons: { title: 'Rotinas & Crons Automáticos', sub: 'Tarefas agendadas e briefings automáticos enviados no seu WhatsApp.' },
   settings: { title: 'Configurações & Governança', sub: 'Custos e usos de IA, memória corporativa, terminal de logs e preferências.' },
   system: { title: 'Configurações & Governança', sub: 'Custos e usos de IA, memória corporativa, terminal de logs e preferências.' },
 };
@@ -188,6 +189,7 @@ function switchTab(tab) {
   if (tab === 'skills') fetchSkillsCatalog();
   if (tab === 'meta-business') fetchMetaBusinessData();
   if (tab === 'tasks') fetchTasks();
+  if (tab === 'crons') fetchCronJobs();
   if (tab === 'webhooks') {
     // webhooks tab data
   }
