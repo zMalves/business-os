@@ -43,14 +43,26 @@ export class MetaService {
   private defaultRedirectUri: string;
 
   constructor() {
-    this.appId = process.env.META_APP_ID || process.env.FACEBOOK_APP_ID || '***REMOVED***';
-    this.appSecret = process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET || '***REMOVED***';
+    const appId = process.env.META_APP_ID || process.env.FACEBOOK_APP_ID;
+    const appSecret = process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET;
+
+    if (!appId || !appSecret) {
+      throw new Error(
+        '[MetaService] META_APP_ID e META_APP_SECRET são obrigatórios. ' +
+        'Defina-os no arquivo .env do servidor (nunca hardcode credenciais no código).'
+      );
+    }
+
+    this.appId = appId;
+    this.appSecret = appSecret;
+
     const envRedirect = process.env.META_REDIRECT_URI;
     this.defaultRedirectUri =
       envRedirect && !envRedirect.includes('secretary.malves.dev.br')
         ? envRedirect
         : `${(process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br').replace(/\/$/, '')}/api/auth/meta/callback`;
   }
+
 
   /**
    * Helper para formatar o ID da conta de anúncios (garante 'act_')
