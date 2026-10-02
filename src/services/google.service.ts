@@ -512,23 +512,7 @@ export class GoogleService {
     const capitalizedToday = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
 
     if (!listRes.success || !listRes.tasks) {
-      // Se não conectou com o Google, tenta buscar tarefas locais do Prisma como fallback
-      const localTasks = await prisma.task.findMany({
-        where: { status: 'PENDING' },
-        orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-        take: 20,
-      });
-
-      if (localTasks.length === 0) {
-        return scope === 'today'
-          ? `📋 *Tarefas de Hoje (${capitalizedToday})*\n\nVocê não possui tarefas pendentes cadastradas para hoje! 🎉`
-          : `📋 *Tarefas dos Próximos 7 Dias*\n\nVocê não possui tarefas pendentes cadastradas para os próximos 7 dias! 🎉`;
-      }
-
-      const tasksText = localTasks
-        .map((t) => `• *${t.title}*${t.dueDate ? ` _(${new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit' }).format(new Date(t.dueDate))})_` : ''}`)
-        .join('\n');
-      return `📋 *Tarefas (${scope === 'today' ? 'Hoje' : 'Próximos 7 Dias'})*\n\n${tasksText}\n\n_Total: ${localTasks.length} pendência(s)._`;
+      return `⚠️ _Não foi possível consultar as tarefas no Google Tasks no momento (${listRes.error || 'Conta desconectada'})._`;
     }
 
     const tasks = listRes.tasks;

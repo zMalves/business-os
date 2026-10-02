@@ -281,33 +281,35 @@ export class CronService {
         ? eventsLines.join('\n')
         : '_Nenhum compromisso agendado no Calendar para hoje._';
 
-    // 2. Google Tasks & Tarefas Locais
+    // 2. Google Tasks (Exclusivamente via API Google Tasks)
     let taskLines: string[] = [];
     try {
-      const tasksRes = await googleService.listTasks({ scope: 'today', maxResults: 15 });
-      if (tasksRes.success && tasksRes.tasks && tasksRes.tasks.length > 0) {
-        taskLines = tasksRes.tasks.map((t: any) => {
-          const notes = t.notes ? ` _(${t.notes.length > 50 ? t.notes.slice(0, 47) + '...' : t.notes})_` : '';
-          return `• *${t.title}*${notes}`;
+      const gRes = await googleService.listGoogleTasks({ showCompleted: false, maxResults: 50 });
+      if (gRes.connected && Array.isArray(gRes.tasks) && gRes.tasks.length > 0) {
+        taskLines = gRes.tasks.map((t: any) => {
+          let dateBadge = '';
+          if (t.dueDate) {
+            const dueObj = new Date(t.dueDate);
+            const dueStr = new Intl.DateTimeFormat('pt-BR', {
+              timeZone: 'America/Sao_Paulo',
+              day: '2-digit',
+              month: '2-digit',
+            }).format(dueObj);
+            dateBadge = ` _(📅 ${dueStr})_`;
+          }
+          const notes = t.description ? `\n   📝 _${t.description.length > 60 ? t.description.slice(0, 57) + '...' : t.description}_` : '';
+          return `• *${t.title}*${dateBadge}${notes}`;
         });
-      } else {
-        // Fallback local do Prisma
-        const localTasks = await prisma.task.findMany({
-          where: { status: 'PENDING' },
-          orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-          take: 6,
-        });
-        if (localTasks.length > 0) {
-          taskLines = localTasks.map((t) => `• [${t.priority}] *${t.title}*`);
-        }
       }
-    } catch {}
+    } catch (err: any) {
+      loggerService.error('system', `Erro ao buscar Google Tasks para resumo matinal: ${err.message}`);
+    }
 
     const tasksCount = taskLines.length;
     const tasksSection =
       taskLines.length > 0
         ? taskLines.join('\n')
-        : '_Nenhuma tarefa pendente cadastrada para hoje! 🎉_';
+        : '_Nenhuma tarefa pendente no Google Tasks! 🎉_';
 
     return `☀️ *BOM DIA, MAYCHEL!*
 📅 _${capitalizedDate}_
@@ -316,7 +318,7 @@ export class CronService {
 🗓️ *COMPROMISSOS DE HOJE:*
 ${eventsSection}
 
-📋 *TAREFAS DE HOJE (${tasksCount}):*
+📋 *TAREFAS PENDENTES GOOGLE TASKS (${tasksCount}):*
 ${tasksSection}
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -340,24 +342,12 @@ ${tasksSection}
 
     let pendingTasks: any[] = [];
     try {
-      const tasksRes = await googleService.listTasks({ scope: 'today', showCompleted: false, maxResults: 30 });
-      if (tasksRes.success && Array.isArray(tasksRes.tasks)) {
-        pendingTasks = tasksRes.tasks;
-      } else {
-        // Fallback local caso a autenticação do Google não esteja configurada
-        const localTasks = await prisma.task.findMany({
-          where: { status: 'PENDING' },
-          orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-          take: 15,
-        });
-        pendingTasks = localTasks.map((t) => ({
-          title: t.title,
-          notes: t.description,
-          due: t.dueDate ? t.dueDate.toISOString() : undefined,
-        }));
+      const gRes = await googleService.listGoogleTasks({ showCompleted: false, maxResults: 50 });
+      if (gRes.connected && Array.isArray(gRes.tasks)) {
+        pendingTasks = gRes.tasks;
       }
     } catch (err: any) {
-      loggerService.error('system', `Erro ao buscar tarefas para fechamento diário: ${err.message}`);
+      loggerService.error('system', `Erro ao buscar tarefas para fechamento diário do Google Tasks: ${err.message}`);
     }
 
     if (pendingTasks.length === 0) {
@@ -366,27 +356,37 @@ ${tasksSection}
 
 ━━━━━━━━━━━━━━━━━━━━
 🎉 *Parabéns, Maychel!*
-Todas as suas tarefas programadas para hoje no *Google Tasks* foram finalizadas com sucesso!
+Todas as suas tarefas no *Google Tasks* estão concluídas ou em dia!
 
 Tenha uma ótima noite de descanso! ✨`;
     }
 
     const taskLines = pendingTasks.map((t, idx) => {
-      const notesStr = t.notes ? `\n   📝 _${t.notes.length > 80 ? t.notes.slice(0, 77) + '...' : t.notes}_` : '';
-      return `${idx + 1}. 🔴 *${t.title}*${notesStr}`;
+      let dateBadge = '';
+      if (t.dueDate) {
+        const dueObj = new Date(t.dueDate);
+        const dueStr = new Intl.DateTimeFormat('pt-BR', {
+          timeZone: 'America/Sao_Paulo',
+          day: '2-digit',
+          month: '2-digit',
+        }).format(dueObj);
+        dateBadge = ` _(📅 ${dueStr})_`;
+      }
+      const notesStr = t.description ? `\n   📝 _${t.description.length > 80 ? t.description.slice(0, 77) + '...' : t.description}_` : '';
+      return `${idx + 1}. 🔴 *${t.title}*${dateBadge}${notesStr}`;
     });
 
     return `📋 *FECHAMENTO DO DIA • GOOGLE TASKS*
 📅 _${capitalizedDate}_
 
 ━━━━━━━━━━━━━━━━━━━━
-Olá, Maychel! Segue o balanço das suas atividades do *Google Tasks* que ainda constam como *pendentes* para hoje:
+Olá, Maychel! Segue o balanço das suas atividades do *Google Tasks* que ainda constam como *pendentes*:
 
 ${taskLines.join('\n\n')}
 
 ━━━━━━━━━━━━━━━━━━━━
 📊 *Total de pendências:* ${pendingTasks.length} atividade(s)
-💡 _Caso tenha concluído alguma ou queira reagendar para amanhã, é só me avisar aqui!_`;
+💡 _Caso tenha concluído alguma ou queira reagendar, é só me avisar aqui!_`;
   }
 
   /**
