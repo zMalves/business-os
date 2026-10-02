@@ -1,9 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { TaskService } from '../services/task.service.js';
+import { taskService } from '../services/task.service.js';
 import { TaskStatus, TaskPriority } from '@prisma/client';
 import { z } from 'zod';
-
-const taskService = new TaskService();
 
 const createTaskSchema = z.object({
   title: z.string().min(1, 'O título é obrigatório'),

@@ -857,21 +857,24 @@
   <div class="modal-backdrop" id="modal-task">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Nova Tarefa / Compromisso</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-brands fa-google" style="color: var(--color-mint); font-size: 1.2rem;"></i>
+          <h3 style="margin: 0; font-size: 1.15rem;">Nova Tarefa no Google Tasks</h3>
+        </div>
         <button class="btn-close" onclick="closeModal('modal-task')">&times;</button>
       </div>
       <form id="form-new-task">
         <div class="form-group">
-          <label>Título</label>
-          <input type="text" id="task-title" placeholder="Ex: Reunião de Planejamento" required>
+          <label>Título da Tarefa</label>
+          <input type="text" id="task-title" placeholder="Ex: Analisar métricas da campanha" required>
         </div>
         <div class="form-group">
-          <label>Descrição</label>
-          <textarea id="task-desc" rows="2" placeholder="Detalhes ou pauta"></textarea>
+          <label>Detalhes / Anotações</label>
+          <textarea id="task-desc" rows="2" placeholder="Detalhes ou notas da tarefa"></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Data / Hora</label>
+            <label>Data de Vencimento</label>
             <input type="datetime-local" id="task-due">
           </div>
           <div class="form-group">
@@ -884,13 +887,9 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label>Categoria</label>
-          <input type="text" id="task-category" placeholder="Ex: Reunião, Pessoal, Financeiro">
-        </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('modal-task')">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar Tarefa</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-brands fa-google"></i> Salvar no Google Tasks</button>
         </div>
       </form>
     </div>

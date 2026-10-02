@@ -9,6 +9,7 @@ import { klimaPartsService } from '../../services/klimaparts.service.js';
 import { metaService } from '../../services/meta.service.js';
 import { skillAgentTools, executeSkillTool } from './skillTools.js';
 import { skillService } from '../../services/skill.service.js';
+import { taskService } from '../../services/task.service.js';
 
 export const agentTools = [
   ...skillAgentTools,
@@ -1157,41 +1158,29 @@ export const agentTools = [
 export async function executeTool(name: string, args: Record<string, any>): Promise<any> {
   switch (name) {
     case 'create_task': {
-      const task = await prisma.task.create({
-        data: {
-          title: args.title,
-          description: args.description || null,
-          dueDate: args.dueDate ? new Date(args.dueDate) : null,
-          priority: (args.priority as TaskPriority) || TaskPriority.MEDIUM,
-          category: args.category || null,
-          status: TaskStatus.PENDING,
-        },
+      const task = await taskService.createTask({
+        title: args.title,
+        description: args.description || undefined,
+        dueDate: args.dueDate || undefined,
+        priority: (args.priority as TaskPriority) || TaskPriority.MEDIUM,
+        category: args.category || 'Google Tasks',
       });
-      return { success: true, message: 'Tarefa criada com sucesso', task };
+      return { success: true, message: 'Tarefa criada com sucesso no Google Tasks', task };
     }
 
     case 'list_tasks': {
-      const where: any = {};
-      if (args.status) {
-        where.status = args.status as TaskStatus;
-      }
-      if (args.category) {
-        where.category = args.category;
-      }
-      const tasks = await prisma.task.findMany({
-        where,
-        orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-        take: 20,
+      const tasks = await taskService.getAllTasks({
+        status: args.status ? (args.status as TaskStatus) : undefined,
+        category: args.category,
       });
       return { count: tasks.length, tasks };
     }
 
     case 'complete_task': {
-      const task = await prisma.task.update({
-        where: { id: args.taskId },
-        data: { status: TaskStatus.COMPLETED },
+      const task = await taskService.updateTask(args.taskId, {
+        status: TaskStatus.COMPLETED,
       });
-      return { success: true, message: 'Tarefa concluída com sucesso', task };
+      return { success: true, message: 'Tarefa concluída com sucesso no Google Tasks', task };
     }
 
     case 'save_memory': {

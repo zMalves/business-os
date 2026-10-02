@@ -985,6 +985,216 @@ export class GoogleService {
       return { success: false, error: error.message };
     }
   }
+
+  // ==========================================
+  // GOOGLE TASKS API (Sempre Integrado)
+  // ==========================================
+
+  /**
+   * Lista todas as tarefas do Google Tasks na lista principal (@default)
+   */
+  async listGoogleTasks(options: { tasklistId?: string; showCompleted?: boolean; showHidden?: boolean; maxResults?: number } = {}) {
+    const auth = await this.getAuthenticatedClient();
+    const google = await getGoogle();
+    if (!auth || !google) {
+      return {
+        connected: false,
+        error: 'Conta Google não conectada. Conecte sua conta Google para sincronizar suas tarefas.',
+        tasks: [],
+      };
+    }
+
+    try {
+      const tasksClient = google.tasks({ version: 'v1', auth });
+      const tasklist = options.tasklistId || '@default';
+
+      const res = await tasksClient.tasks.list({
+        tasklist,
+        showCompleted: options.showCompleted ?? true,
+        showHidden: options.showHidden ?? true,
+        maxResults: options.maxResults || 100,
+      });
+
+      const rawItems = res.data.items || [];
+      const tasks = rawItems.map((t: any) => {
+        const isCompleted = t.status === 'completed';
+        return {
+          id: t.id,
+          googleTaskId: t.id,
+          title: t.title || 'Sem título',
+          description: t.notes || null,
+          dueDate: t.due ? new Date(t.due) : null,
+          status: isCompleted ? 'COMPLETED' : 'PENDING',
+          priority: 'MEDIUM',
+          category: 'Google Tasks',
+          updatedAt: t.updated ? new Date(t.updated) : new Date(),
+          completedAt: t.completed ? new Date(t.completed) : null,
+          isGoogleTask: true,
+        };
+      });
+
+      return {
+        connected: true,
+        count: tasks.length,
+        tasks,
+      };
+    } catch (error: any) {
+      loggerService.error('system', `Erro ao listar tarefas do Google Tasks: ${error.message}`);
+      return { connected: true, error: error.message, tasks: [] };
+    }
+  }
+
+  /**
+   * Cria uma nova tarefa diretamente no Google Tasks
+   */
+  async createGoogleTask(options: { title: string; description?: string; dueDate?: Date | string; tasklistId?: string }) {
+    const auth = await this.getAuthenticatedClient();
+    const google = await getGoogle();
+    if (!auth || !google) {
+      return {
+        connected: false,
+        error: 'Conta Google não conectada.',
+      };
+    }
+
+    try {
+      const tasksClient = google.tasks({ version: 'v1', auth });
+      const tasklist = options.tasklistId || '@default';
+
+      let dueFormatted: string | undefined;
+      if (options.dueDate) {
+        const d = new Date(options.dueDate);
+        if (!isNaN(d.getTime())) {
+          dueFormatted = d.toISOString();
+        }
+      }
+
+      const res = await tasksClient.tasks.insert({
+        tasklist,
+        requestBody: {
+          title: options.title,
+          notes: options.description || undefined,
+          due: dueFormatted,
+        },
+      });
+
+      const t = res.data;
+      const isCompleted = t.status === 'completed';
+
+      return {
+        success: true,
+        task: {
+          id: t.id,
+          googleTaskId: t.id,
+          title: t.title || options.title,
+          description: t.notes || options.description || null,
+          dueDate: t.due ? new Date(t.due) : options.dueDate ? new Date(options.dueDate) : null,
+          status: isCompleted ? 'COMPLETED' : 'PENDING',
+          priority: 'MEDIUM',
+          category: 'Google Tasks',
+          updatedAt: t.updated ? new Date(t.updated) : new Date(),
+          isGoogleTask: true,
+        },
+      };
+    } catch (error: any) {
+      loggerService.error('system', `Erro ao criar tarefa no Google Tasks: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Atualiza ou marca como concluída uma tarefa no Google Tasks
+   */
+  async updateGoogleTask(taskId: string, options: { title?: string; description?: string; dueDate?: Date | string | null; status?: 'PENDING' | 'COMPLETED'; tasklistId?: string }) {
+    const auth = await this.getAuthenticatedClient();
+    const google = await getGoogle();
+    if (!auth || !google) {
+      return {
+        connected: false,
+        error: 'Conta Google não conectada.',
+      };
+    }
+
+    try {
+      const tasksClient = google.tasks({ version: 'v1', auth });
+      const tasklist = options.tasklistId || '@default';
+
+      const requestBody: any = {};
+      if (options.title !== undefined) requestBody.title = options.title;
+      if (options.description !== undefined) requestBody.notes = options.description;
+      if (options.status !== undefined) {
+        requestBody.status = options.status === 'COMPLETED' ? 'completed' : 'needsAction';
+        if (options.status === 'PENDING') {
+          requestBody.completed = null;
+        }
+      }
+      if (options.dueDate !== undefined) {
+        if (options.dueDate === null) {
+          requestBody.due = null;
+        } else {
+          const d = new Date(options.dueDate);
+          if (!isNaN(d.getTime())) requestBody.due = d.toISOString();
+        }
+      }
+
+      const res = await tasksClient.tasks.patch({
+        tasklist,
+        task: taskId,
+        requestBody,
+      });
+
+      const t = res.data;
+      const isCompleted = t.status === 'completed';
+
+      return {
+        success: true,
+        task: {
+          id: t.id,
+          googleTaskId: t.id,
+          title: t.title || options.title || 'Tarefa',
+          description: t.notes || options.description || null,
+          dueDate: t.due ? new Date(t.due) : null,
+          status: isCompleted ? 'COMPLETED' : 'PENDING',
+          priority: 'MEDIUM',
+          category: 'Google Tasks',
+          updatedAt: t.updated ? new Date(t.updated) : new Date(),
+          isGoogleTask: true,
+        },
+      };
+    } catch (error: any) {
+      loggerService.error('system', `Erro ao atualizar tarefa no Google Tasks: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Deleta uma tarefa no Google Tasks
+   */
+  async deleteGoogleTask(taskId: string, tasklistId?: string) {
+    const auth = await this.getAuthenticatedClient();
+    const google = await getGoogle();
+    if (!auth || !google) {
+      return {
+        connected: false,
+        error: 'Conta Google não conectada.',
+      };
+    }
+
+    try {
+      const tasksClient = google.tasks({ version: 'v1', auth });
+      const tasklist = tasklistId || '@default';
+
+      await tasksClient.tasks.delete({
+        tasklist,
+        task: taskId,
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      loggerService.error('system', `Erro ao deletar tarefa no Google Tasks: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export const googleService = new GoogleService();

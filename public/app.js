@@ -474,19 +474,24 @@ function renderTasks() {
       <div class="task-card" style="${isCompleted ? 'opacity: 0.6;' : ''}">
         <div class="task-card-header">
           <h4 class="task-title" style="${isCompleted ? 'text-decoration: line-through;' : ''}">${escapeHtml(task.title)}</h4>
-          <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+          <span class="priority-badge priority-${task.priority || 'MEDIUM'}">${task.priority || 'NORMAL'}</span>
         </div>
         ${task.description ? `<p class="task-desc">${escapeHtml(task.description)}</p>` : ''}
-        ${task.category ? `<small style="color: #818CF8;"><i class="fa-solid fa-tag"></i> ${escapeHtml(task.category)}</small>` : ''}
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+          <span style="font-size: 0.72rem; background: rgba(46, 196, 182, 0.12); color: var(--accent-mint); padding: 2px 8px; border-radius: 999px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-brands fa-google"></i> Google Tasks
+          </span>
+          ${task.category && task.category !== 'Google Tasks' ? `<small style="color: #818CF8;"><i class="fa-solid fa-tag"></i> ${escapeHtml(task.category)}</small>` : ''}
+        </div>
         <div class="task-card-footer">
           <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
           <div class="task-actions">
             ${!isCompleted ? `
-              <button class="btn-icon check" title="Concluir Tarefa" onclick="completeTask('${task.id}')">
+              <button class="btn-icon check" title="Concluir Tarefa no Google Tasks" onclick="completeTask('${task.id}')">
                 <i class="fa-solid fa-circle-check"></i>
               </button>
             ` : ''}
-            <button class="btn-icon trash" title="Excluir" onclick="deleteTask('${task.id}')">
+            <button class="btn-icon trash" title="Excluir do Google Tasks" onclick="deleteTask('${task.id}')">
               <i class="fa-solid fa-trash"></i>
             </button>
           </div>
