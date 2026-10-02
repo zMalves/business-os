@@ -45,9 +45,11 @@ export class MetaService {
   constructor() {
     this.appId = process.env.META_APP_ID || process.env.FACEBOOK_APP_ID || '***REMOVED***';
     this.appSecret = process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET || '***REMOVED***';
+    const envRedirect = process.env.META_REDIRECT_URI;
     this.defaultRedirectUri =
-      process.env.META_REDIRECT_URI ||
-      `${process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br'}/api/auth/meta/callback`;
+      envRedirect && !envRedirect.includes('secretary.malves.dev.br')
+        ? envRedirect
+        : `${(process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br').replace(/\/$/, '')}/api/auth/meta/callback`;
   }
 
   /**

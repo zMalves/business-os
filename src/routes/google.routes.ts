@@ -3,14 +3,15 @@ import { googleService } from '../services/google.service.js';
 import { loggerService } from '../services/logger.service.js';
 
 function getGoogleRedirectUri(req: any): string {
-  if (process.env.GOOGLE_REDIRECT_URI && process.env.GOOGLE_REDIRECT_URI.trim().length > 0) {
-    return process.env.GOOGLE_REDIRECT_URI.trim();
+  const forwardedHost = (req.headers['x-forwarded-host'] || req.headers['host'] || 'b-os.malves.dev.br').toString().split(',')[0].trim();
+  const forwardedProto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').toString().split(',')[0].trim();
+
+  const envUri = process.env.GOOGLE_REDIRECT_URI;
+  if (envUri && envUri.trim().length > 0 && !envUri.includes('secretary.malves.dev.br')) {
+    return envUri.trim();
   }
-  const forwardedProto = req.headers['x-forwarded-proto'];
-  const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'];
-  const proto = (forwardedProto || req.protocol || 'https').toString().split(',')[0].trim();
-  const host = (forwardedHost || 'b-os.malves.dev.br').toString().split(',')[0].trim();
-  return `${proto}://${host}/api/auth/google/callback`;
+
+  return `${forwardedProto}://${forwardedHost}/api/auth/google/callback`;
 }
 
 export async function googleRoutes(app: FastifyInstance) {
