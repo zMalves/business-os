@@ -3072,7 +3072,7 @@ async function handleCopilotSubmit(e) {
   // Append user bubble
   const userDiv = document.createElement('div');
   userDiv.className = 'copilot-bubble copilot-user';
-  userDiv.textContent = text;
+  userDiv.innerHTML = `<div class="copilot-bubble-content">${escapeHtml(text)}</div>`;
   container.appendChild(userDiv);
   input.value = '';
   container.scrollTop = container.scrollHeight;
@@ -3080,7 +3080,12 @@ async function handleCopilotSubmit(e) {
   // Loading indicator
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'copilot-bubble copilot-assistant';
-  loadingDiv.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processando com Victoria...`;
+  loadingDiv.innerHTML = `
+    <div class="copilot-bubble-content" style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+      <i class="fa-solid fa-circle-notch fa-spin" style="color: var(--color-mint); font-size: 0.95rem;"></i>
+      <span>Processando com Victoria...</span>
+    </div>
+  `;
   container.appendChild(loadingDiv);
   container.scrollTop = container.scrollHeight;
 
