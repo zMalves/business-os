@@ -395,40 +395,95 @@ function setupTasks() {
     });
   });
 
-  document.getElementById('btn-new-task').addEventListener('click', () => {
-    openModal('modal-task');
-  });
+  const btnNewTask = document.getElementById('btn-new-task');
+  if (btnNewTask) {
+    btnNewTask.addEventListener('click', () => {
+      document.getElementById('task-id').value = '';
+      document.getElementById('form-new-task').reset();
+      const modalTitle = document.getElementById('modal-task-title');
+      const btnSave = document.getElementById('btn-save-task');
+      if (modalTitle) modalTitle.textContent = 'Nova Tarefa no Google Tasks';
+      if (btnSave) btnSave.innerHTML = '<i class="fa-brands fa-google"></i> Salvar no Google Tasks';
+      openModal('modal-task');
+    });
+  }
 
-  document.getElementById('form-new-task').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('task-title').value.trim();
-    const description = document.getElementById('task-desc').value.trim();
-    const dueDate = document.getElementById('task-due').value;
-    const priority = document.getElementById('task-priority').value;
-    const category = document.getElementById('task-category').value.trim();
+  const formNewTask = document.getElementById('form-new-task');
+  if (formNewTask) {
+    formNewTask.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const taskId = document.getElementById('task-id').value.trim();
+      const title = document.getElementById('task-title').value.trim();
+      const description = document.getElementById('task-desc').value.trim();
+      const dueDate = document.getElementById('task-due').value;
+      const priority = document.getElementById('task-priority').value;
 
-    try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          description: description || undefined,
-          dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
-          priority,
-          category: category || undefined
-        })
-      });
-      if (res.ok) {
-        closeModal('modal-task');
-        document.getElementById('form-new-task').reset();
-        fetchTasks();
+      const isEdit = !!taskId;
+      const url = isEdit ? `/api/tasks/${taskId}` : '/api/tasks';
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            description: description || '',
+            dueDate: dueDate ? new Date(`${dueDate}T12:00:00.000Z`).toISOString() : null,
+            priority
+          })
+        });
+        if (res.ok) {
+          closeModal('modal-task');
+          formNewTask.reset();
+          document.getElementById('task-id').value = '';
+          fetchTasks();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert('Erro ao salvar tarefa: ' + (errData.message || errData.error || 'Erro desconhecido'));
+        }
+      } catch (err) {
+        alert('Erro ao salvar tarefa: ' + err.message);
       }
-    } catch (err) {
-      alert('Erro ao criar tarefa: ' + err.message);
-    }
-  });
+    });
+  }
 }
+
+function openEditTaskModal(taskId) {
+  const task = allTasks.find(t => t.id === taskId || (t.googleTaskId && t.googleTaskId === taskId));
+  if (!task) return;
+
+  const idInput = document.getElementById('task-id');
+  const titleInput = document.getElementById('task-title');
+  const descInput = document.getElementById('task-desc');
+  const prioritySelect = document.getElementById('task-priority');
+  const dueInput = document.getElementById('task-due');
+  const modalTitle = document.getElementById('modal-task-title');
+  const btnSave = document.getElementById('btn-save-task');
+
+  if (idInput) idInput.value = task.id || task.googleTaskId;
+  if (titleInput) titleInput.value = task.title || '';
+  if (descInput) descInput.value = task.description || '';
+  if (prioritySelect) prioritySelect.value = task.priority || 'MEDIUM';
+
+  if (dueInput) {
+    if (task.dueDate) {
+      const d = new Date(task.dueDate);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dueInput.value = `${yyyy}-${mm}-${dd}`;
+    } else {
+      dueInput.value = '';
+    }
+  }
+
+  if (modalTitle) modalTitle.textContent = 'Editar Tarefa no Google Tasks';
+  if (btnSave) btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Alterações';
+
+  openModal('modal-task');
+}
+window.openEditTaskModal = openEditTaskModal;
 
 async function fetchTasks() {
   try {
@@ -500,7 +555,7 @@ function renderTasks() {
               <i class="${isCompleted ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}"></i>
             </button>
 
-            <div class="task-list-body">
+            <div class="task-list-body" onclick="openEditTaskModal('${task.id}')" title="Clique para editar tarefa no Google Tasks">
               <div class="task-list-title-row">
                 <span class="task-list-title ${isCompleted ? 'completed' : ''}">${escapeHtml(task.title)}</span>
                 <span class="priority-badge priority-${task.priority || 'MEDIUM'}">${task.priority || 'NORMAL'}</span>
@@ -518,7 +573,10 @@ function renderTasks() {
             </div>
 
             <div class="task-list-actions">
-              <button class="btn-action-icon danger" title="Excluir do Google Tasks" onclick="deleteTask('${task.id}')">
+              <button class="btn-action-icon" title="Editar Tarefa" onclick="event.stopPropagation(); openEditTaskModal('${task.id}')">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button class="btn-action-icon danger" title="Excluir do Google Tasks" onclick="event.stopPropagation(); deleteTask('${task.id}')">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>

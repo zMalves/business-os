@@ -1319,6 +1319,7 @@ body.hide-tool-badges .tool-call-badge {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  cursor: pointer;
 }
 
 .task-list-title-row {
@@ -1333,6 +1334,11 @@ body.hide-tool-badges .tool-call-badge {
   font-weight: 600;
   color: var(--color-ink);
   word-break: break-word;
+  transition: color var(--transition-fast);
+}
+
+.task-list-body:hover .task-list-title {
+  color: var(--color-cyprus);
 }
 
 .task-list-title.completed {
