@@ -398,8 +398,17 @@ html, body {
 .tab-panel::-webkit-scrollbar-thumb:hover { background: rgba(0, 70, 67, 0.30); }
 
 /* ============================================================================
-   DASHBOARD HERO BANNER
+   DASHBOARD QUICK ACTIONS BAR
    ============================================================================ */
+.dashboard-quick-actions-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
 .dashboard-hero-banner {
   display: flex;
   justify-content: space-between;

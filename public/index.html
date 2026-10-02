@@ -152,29 +152,16 @@
 
       <!-- TAB 0: Visão Geral Executiva (Dashboard) -->
       <section class="tab-panel active" id="tab-dashboard">
-        <div class="dashboard-hero-banner">
-          <div>
-            <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-slate); margin-bottom: 4px;">
-              Centro de Inteligência & Operações
-            </div>
-            <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--color-cyprus); margin: 0; letter-spacing: -0.02em;">
-              Business OS Workspace
-            </h2>
-            <p style="font-size: 0.86rem; color: var(--color-slate); margin-top: 4px; margin-bottom: 0;">
-              Visão unificada em tempo real de tráfego, vendas, rotinas operacionais e agenda.
-            </p>
-          </div>
-          <div class="dashboard-quick-actions">
-            <button class="btn btn-primary btn-sm" onclick="sendCopilotPrompt('Victoria, faça um briefing executivo consolidado com status das lojas, tarefas de hoje e anúncios.')">
-              <i class="fa-solid fa-sun"></i> Briefing do Dia
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="switchTab('ecommerce')">
-              <i class="fa-solid fa-store"></i> Ver Lojas
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="switchTab('meta-business')">
-              <i class="fa-brands fa-meta" style="color: #0081FB;"></i> Meta Ads
-            </button>
-          </div>
+        <div class="dashboard-quick-actions-bar">
+          <button class="btn btn-primary btn-sm" onclick="sendCopilotPrompt('Victoria, faça um briefing executivo consolidado com status das lojas, tarefas de hoje e anúncios.')">
+            <i class="fa-solid fa-sun"></i> Briefing do Dia
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('ecommerce')">
+            <i class="fa-solid fa-store"></i> Ver Lojas
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('meta-business')">
+            <i class="fa-brands fa-meta" style="color: #0081FB;"></i> Meta Ads
+          </button>
         </div>
 
         <!-- Bento Grid de KPIs -->
