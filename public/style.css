@@ -2954,7 +2954,7 @@ input:checked + .slider:before {
   border: 1px solid var(--color-sand-border);
   border-radius: var(--radius-sm);
   padding: 18px 20px;
-  cursor: pointer;
+  cursor: default;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
   display: flex;
   flex-direction: column;
