@@ -330,21 +330,13 @@
 
       <!-- TAB: Dynamic Skills -->
       <section class="tab-panel" id="tab-skills">
-        <div class="panel-header-actions">
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Catálogo de Dynamic Skills
-            </h3>
-            <p style="font-size: 0.84rem; color: var(--color-slate); margin-top: 2px;">
-              Habilidades compostas criadas e executadas em tempo real com validação e Dry-Run.
-            </p>
-          </div>
+        <div class="panel-header-actions" style="justify-content: flex-end; margin-bottom: 16px;">
           <button class="btn btn-secondary btn-sm" onclick="fetchSkillsCatalog()">
             <i class="fa-solid fa-arrows-rotate"></i> Atualizar Skills
           </button>
         </div>
 
-        <div id="skills-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 16px;">
+        <div id="skills-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
           <!-- Carregado via JS -->
         </div>
       </section>
@@ -369,21 +361,13 @@
 
       <!-- TAB: Rotinas & Crons Automáticos -->
       <section class="tab-panel" id="tab-crons">
-        <div class="panel-header-actions">
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
-              <i class="fa-solid fa-clock-rotate-left"></i> Rotinas & Crons Automáticos
-            </h3>
-            <p style="font-size: 0.84rem; color: var(--color-slate); margin-top: 2px;">
-              Tarefas agendadas e briefings matinais enviados automaticamente no seu WhatsApp.
-            </p>
-          </div>
+        <div class="panel-header-actions" style="justify-content: flex-end; margin-bottom: 16px;">
           <button class="btn btn-primary btn-sm" id="btn-new-cron" onclick="openModal('modal-cron')">
             <i class="fa-solid fa-plus"></i> Nova Rotina
           </button>
         </div>
 
-        <div class="crons-grid" id="crons-grid" style="margin-top: 16px;">
+        <div class="crons-grid" id="crons-grid">
           <!-- Carregado via JS -->
         </div>
       </section>
