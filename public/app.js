@@ -1,6 +1,6 @@
 // State Management
 let currentTab = 'dashboard';
-let activeTaskFilter = 'ALL';
+let activeTaskFilter = 'PENDING';
 let allTasks = [];
 let allMemories = [];
 let activeConversationId = localStorage.getItem('active_conversation_id') || null;
@@ -189,7 +189,13 @@ function switchTab(tab) {
   if (tab === 'ecommerce') fetchEcommerceData();
   if (tab === 'skills') fetchSkillsCatalog();
   if (tab === 'meta-business') fetchMetaBusinessData();
-  if (tab === 'tasks') fetchTasks();
+  if (tab === 'tasks') {
+    activeTaskFilter = 'PENDING';
+    document.querySelectorAll('#tab-tasks .filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === 'PENDING');
+    });
+    fetchTasks();
+  }
   if (tab === 'crons') fetchCronJobs();
   if (tab === 'webhooks') {
     // webhooks tab data
