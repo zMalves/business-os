@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secretary AI Agent</title>
-  <meta name="description" content="Secretary AI Agent - Assistente Executiva Inteligente, Gestão de Tarefas e Memória Contínua.">
+  <title>Business OS — Executive Workspace</title>
+  <meta name="description" content="Business OS — Executive AI Workspace. Gestão de anúncios, vendas, tarefas e automações com Victoria Copilot.">
   <meta name="google-site-verification" content="xy38c0CB1TqO-uDUyH02cX8TKALbv9dYTBUgTAU3pn0" />
   
   <!-- Google Fonts & Font Awesome Icons -->
@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <link rel="stylesheet" href="style.css?v=20260928_1955">
+  <link rel="stylesheet" href="workspace.css?v=20261002_1">
   
   <script>
     window.handleLogout = async function(e) {
@@ -37,12 +38,13 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="brand">
-        <a href="/home" style="text-decoration: none; color: inherit;" title="Business OS — Executive AI Workspace">
+        <a href="/home" title="Business OS — Executive AI Workspace">
+          <div class="brand-icon-box">
+            <i class="fa-solid fa-cube"></i>
+          </div>
           <div class="brand-text">
-            <h1 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--color-cyprus); letter-spacing: -0.02em;">
-              <i class="fa-solid fa-cube" style="color: var(--color-cyprus); margin-right: 6px;"></i> Business OS
-            </h1>
-            <span class="brand-subtitle" style="font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-slate); font-weight: 600;">Executive Workspace</span>
+            <h1>Business OS</h1>
+            <span class="brand-subtitle">Executive Workspace</span>
           </div>
         </a>
       </div>
@@ -196,7 +198,7 @@
           <!-- Card 2: Meta Ads -->
           <div class="bento-card" onclick="switchTab('meta-business')">
             <div class="bento-card-header">
-              <span class="bento-label">Meta Ads (Investimento)</span>
+              <span class="bento-label">Meta Ads (Invest.)</span>
               <span class="badge badge-cyprus"><i class="fa-brands fa-meta"></i> Tráfego</span>
             </div>
             <div class="bento-main-metric" id="dash-meta-spend">R$ 0,00</div>
@@ -206,7 +208,7 @@
           <!-- Card 3: Google Agenda -->
           <div class="bento-card" onclick="switchTab('tasks')">
             <div class="bento-card-header">
-              <span class="bento-label">Google Agenda (Hoje)</span>
+              <span class="bento-label">Google Agenda</span>
               <span class="badge badge-amber"><i class="fa-brands fa-google"></i> Meet</span>
             </div>
             <div class="bento-main-metric" id="dash-calendar-count">0</div>
@@ -229,11 +231,11 @@
               <span class="bento-label">Telemetria de IA</span>
               <span class="badge badge-mint"><i class="fa-solid fa-bolt"></i> DeepSeek V4</span>
             </div>
-            <div class="bento-main-metric" id="dash-ai-cost">R$ 0,00</div>
+            <div class="bento-main-metric" id="dash-ai-cost">$0.000</div>
             <div class="bento-sub-metric" id="dash-ai-tokens"><i class="fa-solid fa-coins"></i> 0 tokens consumidos</div>
           </div>
 
-          <!-- Card 6: Automações & Webhooks -->
+          <!-- Card 6: Dynamic Skills -->
           <div class="bento-card" onclick="switchTab('skills')">
             <div class="bento-card-header">
               <span class="bento-label">Dynamic Skills</span>
@@ -1453,6 +1455,6 @@
   <!-- Standardized Toast Notifications Container -->
   <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="app.js?v=20261002_2000"></script>
+  <script src="app.js?v=20261002_2001"></script>
 </body>
 </html>
