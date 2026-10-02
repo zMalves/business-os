@@ -77,17 +77,17 @@ html, body {
 }
 
 .brand-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #2EC4B6 0%, #004643 100%);
+  width: auto;
+  height: auto;
+  background: transparent !important;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 0.9rem;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(46, 196, 182, 0.35);
+  font-size: 1.25rem;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+  border-radius: 0;
 }
 
 .brand-text h1,
