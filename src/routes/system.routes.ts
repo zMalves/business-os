@@ -76,10 +76,10 @@ export async function systemRoutes(app: FastifyInstance) {
       const commitRes = await execAsync('git log -n 1 --oneline');
       const durationMs = Date.now() - startTime;
 
-      // Dispara hot-reload do tsx watch tocando no server.ts de forma segura sem derrubar o container
-      try {
-        await execAsync('touch src/server.ts');
-      } catch {}
+      // Recarrega o processo de forma limpa e imediata via restart do container
+      setTimeout(() => {
+        process.exit(0);
+      }, 600);
 
       return reply.send({
         success: true,
