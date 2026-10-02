@@ -157,9 +157,9 @@ export async function systemRoutes(app: FastifyInstance) {
 
     return reply.send({
       success: true,
-      service: 'Secretaria IA',
+      service: 'Business OS',
       environment: process.env.NODE_ENV || 'development',
-      port: process.env.PORT || 3000,
+      port: process.env.PORT || 4017,
       git: {
         branch: gitBranch,
         commit: gitCommit,

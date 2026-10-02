@@ -1,6 +1,6 @@
-# 🌐 Guia de Integrações Google Workspace da Victoria
+# 🌐 Guia de Integrações Google Workspace da Victoria (Business OS)
 
-Este documento descreve todas as capacidades, ferramentas e fluxos de trabalho do ecossistema **Google Workspace** conectados à secretária executiva **Victoria**.
+Este documento descreve todas as capacidades, ferramentas e fluxos de trabalho do ecossistema **Google Workspace** conectados à Copiloto Executiva **Victoria** no **Business OS**.
 
 ---
 

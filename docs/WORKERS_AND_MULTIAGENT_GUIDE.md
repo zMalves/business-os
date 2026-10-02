@@ -1,12 +1,12 @@
-# 🏛️ Guia de Arquitetura Multi-Worker & Memória Corporativa
+# 🏛️ Guia de Arquitetura Multi-Worker & Memória Corporativa (Business OS)
 
-Este documento define as diretrizes estratégicas e a arquitetura técnica para a expansão da **Victoria** como **Chief of Staff / Orquestradora Central** de múltiplos workers e agentes especializados.
+Este documento define as diretrizes estratégicas e a arquitetura técnica para a expansão da **Victoria** como **Chief of Staff / Orquestradora Central** de múltiplos workers e agentes especializados no **Business OS**.
 
 ---
 
 ## 1. Visão Geral da Arquitetura Hub-and-Spoke
 
-Na arquitetura da Secretaria IA, o usuário (**Maychel**) interage centralmente com a **Victoria** (via WhatsApp ou Dashboard). A Victoria atua como a camada de inteligência executiva, despachando comandos e recebendo eventos de workers especializados.
+Na arquitetura do Business OS, o usuário (**Maychel**) interage centralmente com a **Victoria** (via WhatsApp ou Dashboard Executivo). A Victoria atua como a camada de inteligência executiva e Chief of Staff, despachando comandos e recebendo eventos de workers especializados.
 
 ```
                          ┌─────────────────────────────────┐

@@ -1,4 +1,4 @@
-// Prisma Schema para Secretaria IA (MariaDB)
+// Prisma Schema para Business OS (MariaDB)
 
 generator client {
   provider = "prisma-client-js"

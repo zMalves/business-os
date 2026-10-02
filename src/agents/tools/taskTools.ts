@@ -546,7 +546,7 @@ export const agentTools = [
   },
   {
     name: 'list_scheduled_jobs',
-    description: 'Lista todas as rotinas, crons e automações periódicas ativas da secretária.',
+    description: 'Lista todas as rotinas, crons e automações periódicas ativas no Business OS.',
     parameters: {
       type: 'object',
       properties: {},
@@ -935,7 +935,7 @@ export const agentTools = [
   },
   {
     name: 'create_task',
-    description: 'Cria uma nova tarefa, compromisso ou lembrete na agenda da secretária.',
+    description: 'Cria uma nova tarefa, compromisso ou lembrete na agenda do Business OS.',
     parameters: {
       type: 'object',
       properties: {

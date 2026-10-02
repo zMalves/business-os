@@ -3,7 +3,7 @@ import { skillService, DynamicSkillInput } from '../../services/skill.service.js
 export const skillAgentTools = [
   {
     name: 'skill_create_draft',
-    description: 'Formula e salva um rascunho de nova habilidade/skill dinâmica para a secretária aprender um fluxo de trabalho personalizado (ex: cruzar relatórios, disparar rotinas ou encadear ferramentas existentes).',
+    description: 'Formula e salva um rascunho de nova habilidade/skill dinâmica para a Victoria Copilot aprender um fluxo de trabalho personalizado no Business OS (ex: cruzar relatórios, disparar rotinas ou encadear ferramentas existentes).',
     parameters: {
       type: 'object',
       properties: {
@@ -121,7 +121,7 @@ export const skillAgentTools = [
   },
   {
     name: 'skill_activate',
-    description: 'Aprova e ativa oficialmente uma habilidade/skill criada para que fique disponível no catálogo diário da secretária.',
+    description: 'Aprova e ativa oficialmente uma habilidade/skill criada para que fique disponível no catálogo diário do Business OS.',
     parameters: {
       type: 'object',
       properties: {

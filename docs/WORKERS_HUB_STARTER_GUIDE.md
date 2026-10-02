@@ -25,8 +25,8 @@ O Hub de Workers é projetado para executar tarefas pesadas em segundo plano (No
                            │  HTTP POST (JSON)
                            ▼  Header: x-worker-key
 ┌────────────────────────────────────────────────────────┐
-│              VICTORIA (SECRETARIA IA)                  │
-│       Recebe eventos e notifica no WhatsApp            │
+│            VICTORIA COPILOT (BUSINESS OS)              │
+│       Recebe eventos e notifica no WhatsApp / Web      │
 └────────────────────────────────────────────────────────┘
 ```
 

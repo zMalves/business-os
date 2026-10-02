@@ -1,12 +1,12 @@
 # 🧠 Guia Arquitetural: Dynamic Skills Engine (Habilidades Dinâmicas)
 
-O **Dynamic Skills Engine** permite que a **Secretaria IA (Victoria)** aprenda, teste, persista no MariaDB e execute fluxos de trabalho compostos em tempo de execução, funcionando com **alta confiabilidade determinística**, validação prévia (*Dry-Run*) e **custo mínimo de tokens**.
+O **Dynamic Skills Engine** permite que o **Business OS (Victoria Copilot)** aprenda, teste, persista no MariaDB e execute fluxos de trabalho compostos em tempo de execução, funcionando com **alta confiabilidade determinística**, validação prévia (*Dry-Run*) e **custo mínimo de tokens**.
 
 ---
 
 ## 🎯 Por que Skills Dinâmicas?
 
-| Abordagem Tradicional (Chatbot) | Dynamic Skills Engine (Victoria) |
+| Abordagem Tradicional (Chatbot) | Dynamic Skills Engine (Business OS) |
 | :--- | :--- |
 | Tenta lembrar rotinas longas via prompt solto | Estrutura fluxos como grafos/passos ordenados de ferramentas |
 | Alto risco de alucinar ou esquecer parâmetros | Schema estrito de entrada e tipagem via Zod / JSON Schema |
@@ -21,7 +21,7 @@ O **Dynamic Skills Engine** permite que a **Secretaria IA (Victoria)** aprenda, 
 sequenceDiagram
     autonumber
     actor Maychel as Maychel (Usuário)
-    participant Victoria as Victoria (Secretária IA)
+    participant Victoria as Victoria (Copiloto Business OS)
     participant Engine as SkillService (Engine)
     participant DB as MariaDB (Prisma)
 

@@ -34,7 +34,7 @@ export class KlimaPartsService {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${this.patToken}`,
       'X-MCP-Token': this.patToken,
-      'X-Agent-Name': 'Victoria-Secretaria-IA',
+      'X-Agent-Name': 'Victoria-Business-OS',
     };
   }
 

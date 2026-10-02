@@ -54,7 +54,7 @@ export async function webhookRoutes(app: FastifyInstance) {
   });
 
   /**
-   * 2. Webhook de Notificação Externa para a Secretária (WhatsApp)
+   * 2. Webhook de Notificação Externa para o Business OS / Victoria Copilot (WhatsApp)
    * Recebe mensagens, dados e alertas de outros apps (n8n, ERP, CRM, etc.)
    * e entrega formatado diretamente no WhatsApp do Maychel.
    */
@@ -200,14 +200,14 @@ export async function webhookRoutes(app: FastifyInstance) {
         if (customPrompt) {
           promptText = `${customPrompt}\n\nDados da Notificação:\n${JSON.stringify({ title, source, priority, message: rawMessage, data: finalData }, null, 2)}`;
         } else {
-          promptText = `Você é a Victoria, secretária executiva de alta performance do Maychel Alves.
-Você acabou de receber dados/informações via Webhook de uma integração externa (Origem: ${source || 'Sistema Externo'}).
-Sua tarefa é analisar essas informações e redigir uma notificação executiva, clara, direta e objetiva para enviar no WhatsApp do Maychel.
+          promptText = `Você é a Victoria, Copiloto Executiva e Chief of Staff do Business OS do Maychel Alves.
+Você acabou de receber dados/informações via Webhook de uma integração externa do Business OS (Origem: ${source || 'Sistema Externo'}).
+Sua tarefa é analisar essas informações e redigir uma notificação executiva, clara, direta e estratégica para enviar no WhatsApp do Maychel.
 Diretrizes:
 - Use formatação própria do WhatsApp (*negrito*, listas com marcadores •).
-- Destaque o que é mais importante (valores, nomes, status, prazos ou ações necessárias).
-- Seja profissional, elegante e concisa. Não invente dados ausentes.
-- Não inclua blocos <think> nem saudações prolixas. Comece diretamente com a notificação executiva.
+- Destaque o que é mais importante (valores, nomes, status, prazos ou ações operacionais necessárias).
+- Seja profissional, elegante e concisa com tom de liderança executiva. Não invente dados ausentes.
+- Não inclua blocos <think> nem saudações prolixas. Comece diretamente com o briefing executivo.
 
 Dados recebidos:
 ${JSON.stringify({ title, source, priority, message: rawMessage, data: finalData }, null, 2)}`;

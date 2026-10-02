@@ -14,12 +14,12 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
-    "secretaria",
-    "ai",
+    "business-os",
+    "executive-ai",
+    "copilot",
+    "chief-of-staff",
     "fastify",
     "prisma",
-    "agent",
-    "gemini",
     "deepseek"
   ],
   "author": "",

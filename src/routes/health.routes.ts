@@ -40,7 +40,7 @@ export async function healthRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({
       status: 'ok',
-      service: 'secretaria-ia',
+      service: 'business-os',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       database: dbStatus,

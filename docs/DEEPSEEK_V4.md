@@ -1,6 +1,6 @@
 # 🚀 Guia de Integração e Documentação: DeepSeek-V4-Flash
 
-Este documento detalha o funcionamento, especificações técnicas, parâmetros e boas práticas para utilizar o modelo **`deepseek-v4-flash`** na **Secretaria IA**.
+Este documento detalha o funcionamento, especificações técnicas, parâmetros e boas práticas para utilizar o modelo **`deepseek-v4-flash`** no **Business OS**.
 
 ---
 
@@ -37,7 +37,7 @@ O **DeepSeek-V4-Flash** é um modelo de linguagem baseado na arquitetura **Mixtu
   "messages": [
     {
       "role": "system",
-      "content": "Instruções do sistema para a Secretária IA..."
+      "content": "Instruções do sistema para o Business OS / Victoria Copilot..."
     },
     {
       "role": "user",
@@ -85,7 +85,7 @@ export const agentTools = [
 ];
 ```
 
-O `SecretaryAgent` ([src/agents/agent.ts](file:///c:/Users/Maychel/OneDrive%20-%20Seconds/Documentos/Sistemas/secretaria/src/agents/agent.ts)) intercepta a resposta `tool_calls`, executa a função no MariaDB e devolve o resultado com role `tool` para o DeepSeek fechar a resposta.
+O `BusinessOSAgent` ([src/agents/agent.ts](file:///c:/Users/Maychel/OneDrive%20-%20Seconds/Documentos/Sistemas/secretaria/business-os/src/agents/agent.ts)) intercepta a resposta `tool_calls`, executa a função no MariaDB e devolve o resultado com role `tool` para o DeepSeek fechar a resposta.
 
 ---
 

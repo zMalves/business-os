@@ -1,7 +1,7 @@
 # 📢 Documentação da API de Webhook de Notificações
-### **Victoria — Secretaria IA Executiva**
+### **Victoria — Copiloto Executiva & Chief of Staff (Business OS)**
 
-Este documento descreve como qualquer aplicativo externo (n8n, Zapier, Make, ERPs, CRMs, Plataformas de E-commerce, Scripts em Python/PHP/Node.js ou Webhooks de Pagamento) pode enviar mensagens, dados e alertas diretamente para o **WhatsApp do Maychel**.
+Este documento descreve como qualquer aplicativo externo (n8n, Zapier, Make, ERPs, CRMs, Plataformas de E-commerce, Scripts em Python/PHP/Node.js ou Webhooks de Pagamento) pode enviar mensagens, dados e alertas diretamente para o **Business OS** e para o **WhatsApp do Maychel**.
 
 ---
 
@@ -18,16 +18,16 @@ Você pode enviar esse token de **qualquer uma das seguintes 4 maneiras** (escol
 | **No Corpo JSON** (Recomendado) | Campo `token` no JSON | `{"token": "victoria_master_secret_2026", ...}` |
 | **Header HTTP Personalizado** | `x-webhook-token` ou `x-api-key` | `x-webhook-token: victoria_master_secret_2026` |
 | **Header Authorization** | `Authorization: Bearer <token>` | `Authorization: Bearer victoria_master_secret_2026` |
-| **Query Parameter (URL)** | Parâmetro `?token=` na URL | `https://secretary.malves.dev.br/api/webhook/notify?token=victoria_master_secret_2026` |
+| **Query Parameter (URL)** | Parâmetro `?token=` na URL | `https://b-os.malves.dev.br/api/webhook/notify?token=victoria_master_secret_2026` |
 
 ---
 
 ## 🌐 2. Endpoint e Métodos
 
-- **URL Principal:** `https://secretary.malves.dev.br/api/webhook/notify`
+- **URL Principal:** `https://b-os.malves.dev.br/api/webhook/notify`
 - **Aliases Válidos:**
-  - `https://secretary.malves.dev.br/api/webhook/message`
-  - `https://secretary.malves.dev.br/api/webhook/send`
+  - `https://b-os.malves.dev.br/api/webhook/message`
+  - `https://b-os.malves.dev.br/api/webhook/send`
 - **Métodos HTTP:** `POST` (Recomendado para envio de JSON) ou `GET` (para chamadas rápidas via link).
 - **Content-Type:** `application/json`
 

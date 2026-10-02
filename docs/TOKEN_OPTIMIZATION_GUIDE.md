@@ -1,6 +1,6 @@
 # 📉 Guia de Otimização Extrema de Tokens & Custos de IA
 
-Este documento reúne todas as técnicas arquiteturais, práticas de engenharia de prompt e diretrizes de governança aplicadas na **Secretaria IA (Victoria)** para manter os custos operacionais em centavos de real por mês.
+Este documento reúne todas as técnicas arquiteturais, práticas de engenharia de prompt e diretrizes de governança aplicadas no **Business OS (Victoria Copilot)** para manter os custos operacionais em centavos de real por mês.
 
 ---
 

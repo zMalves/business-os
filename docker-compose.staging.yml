@@ -1,22 +1,22 @@
 services:
-  secretaria-app-dev:
+  business-os-app-dev:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: secretaria-ia-dev
+    container_name: business-os-app-dev
     restart: unless-stopped
     user: "0:0"
     ports:
-      - "3001:3000"
+      - "4018:4017"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
       - GIT_BRANCH=develop
-      - PORT=3000
+      - PORT=4017
       - HOST=0.0.0.0
-      - DATABASE_URL=${DATABASE_URL:-mysql://secretaria_user:secretaria_pass@mariadb-dev:3306/secretaria_dev_db}
+      - DATABASE_URL=${DATABASE_URL:-mysql://business_user:business_pass@business-os-mariadb-dev:3306/business_os_dev_db}
       - AI_PROVIDER=${AI_PROVIDER:-deepseek}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -25,47 +25,47 @@ services:
       - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-v4-flash}
       - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
     networks:
-      - secretaria-dev-net
+      - business-os-dev-net
     depends_on:
-      - mariadb-dev
+      - business-os-mariadb-dev
 
-  mariadb-dev:
+  business-os-mariadb-dev:
     image: mariadb:11.4
-    container_name: secretaria-mariadb-dev
+    container_name: business-os-mariadb-dev
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_pass}
-      MYSQL_DATABASE: secretaria_dev_db
-      MYSQL_USER: secretaria_user
-      MYSQL_PASSWORD: secretaria_pass
+      MYSQL_DATABASE: business_os_dev_db
+      MYSQL_USER: business_user
+      MYSQL_PASSWORD: business_pass
     ports:
-      - "3308:3306" # Porta 3308 para não conflitar com produção (3305)
+      - "3318:3306"
     volumes:
-      - mariadb_dev_data:/var/lib/mysql
+      - business_os_mariadb_dev_data:/var/lib/mysql
     networks:
-      - secretaria-dev-net
+      - business-os-dev-net
 
-  phpmyadmin-dev:
+  business-os-phpmyadmin-dev:
     image: phpmyadmin/phpmyadmin:latest
-    container_name: secretaria-phpmyadmin-dev
+    container_name: business-os-phpmyadmin-dev
     restart: unless-stopped
     environment:
-      PMA_HOST: mariadb-dev
+      PMA_HOST: business-os-mariadb-dev
       PMA_PORT: 3306
       PMA_USER: root
       PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_pass}
       UPLOAD_LIMIT: 64M
     ports:
-      - "8096:80" # Porta 8096 para o phpMyAdmin de DEV
+      - "8098:80"
     networks:
-      - secretaria-dev-net
+      - business-os-dev-net
     depends_on:
-      - mariadb-dev
+      - business-os-mariadb-dev
 
 volumes:
-  mariadb_dev_data:
+  business_os_mariadb_dev_data:
     driver: local
 
 networks:
-  secretaria-dev-net:
+  business-os-dev-net:
     driver: bridge

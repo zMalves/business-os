@@ -209,8 +209,8 @@ function setupChat() {
               <small>Agora</small>
             </div>
             <div class="bubble-content">
-              <p>Olá! Sou a <strong>Victoria</strong>, sua Secretária Executiva pessoal.</p>
-              <p>Como posso ajudar você com seus compromissos, contatos e tarefas hoje?</p>
+              <p>Olá! Sou a <strong>Victoria</strong>, sua Copiloto Executiva e Chief of Staff do <strong>Business OS</strong>.</p>
+              <p>Como posso ajudar com a visão geral do seu negócio, operações, tráfego ou tomada de decisão estratégica hoje?</p>
             </div>
           </div>
         </div>
@@ -745,7 +745,7 @@ function renderMemories() {
     memoriesGrid.innerHTML = `
       <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-dim);">
         <i class="fa-solid fa-brain" style="font-size: 2rem; margin-bottom: 12px;"></i>
-        <p>Nenhum fato memorizado ainda. Peça para a secretária memorizar algo ou adicione acima.</p>
+        <p>Nenhum fato memorizado ainda. Peça para a Victoria memorizar algo no Business OS ou adicione acima.</p>
       </div>
     `;
     return;
