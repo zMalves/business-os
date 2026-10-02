@@ -49,55 +49,40 @@
       </div>
 
       <nav class="nav-menu">
-        <div class="nav-section-label" style="font-size: 0.68rem; font-weight: 700; color: var(--color-muted); padding: 8px 12px 4px; letter-spacing: 0.06em; text-transform: uppercase;">WORKSPACE & OPERAÇÕES</div>
         <button class="nav-item active" data-tab="dashboard">
           <i class="fa-solid fa-chart-pie"></i>
           <span>Visão Geral</span>
         </button>
         <button class="nav-item" data-tab="meta-business">
           <i class="fa-brands fa-meta" style="color: #0081FB;"></i>
-          <span>Meta Ads & Growth</span>
+          <span>Meta Ads</span>
         </button>
         <button class="nav-item" data-tab="ecommerce">
           <i class="fa-solid fa-store" style="color: var(--color-mint);"></i>
-          <span>Operações & Lojas</span>
+          <span>Operações</span>
         </button>
         <button class="nav-item" data-tab="tasks">
           <i class="fa-solid fa-calendar-check"></i>
-          <span>Google & Tarefas</span>
+          <span>Tarefas</span>
           <span class="counter" id="task-counter">0</span>
         </button>
         <button class="nav-item" data-tab="skills">
           <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-amber);"></i>
-          <span>Dynamic Skills</span>
+          <span>Skills</span>
         </button>
         <button class="nav-item" data-tab="webhooks">
           <i class="fa-solid fa-network-wired"></i>
-          <span>Webhooks & Hub</span>
+          <span>Webhooks</span>
         </button>
 
-        <div class="nav-section-label" style="font-size: 0.68rem; font-weight: 700; color: var(--color-muted); padding: 14px 12px 4px; letter-spacing: 0.06em; text-transform: uppercase;">AUDITORIA & GESTÃO</div>
-        <button class="nav-item" data-tab="ai-hub">
-          <i class="fa-solid fa-coins"></i>
-          <span>Custos & Uso de IA</span>
-        </button>
-        <button class="nav-item" data-tab="memories">
-          <i class="fa-solid fa-brain"></i>
-          <span>Memória Corporativa</span>
-        </button>
-        <button class="nav-item" data-tab="logs">
-          <i class="fa-solid fa-terminal"></i>
-          <span>Terminal de Logs</span>
-          <span class="counter" id="logs-counter">0</span>
-        </button>
-        <button class="nav-item" data-tab="system">
-          <i class="fa-solid fa-sliders"></i>
-          <span>Configurações</span>
-        </button>
-        <button class="nav-item" data-tab="chat">
-          <i class="fa-solid fa-comments"></i>
-          <span>Chat Imersivo</span>
-        </button>
+        <div class="nav-menu-spacer" style="margin-top: auto;"></div>
+
+        <div class="nav-bottom-group" style="padding-top: 10px; border-top: 1px solid var(--sidebar-border); display: flex; flex-direction: column; gap: 4px;">
+          <button class="nav-item" data-tab="settings">
+            <i class="fa-solid fa-gear"></i>
+            <span>Configurações</span>
+          </button>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -416,42 +401,6 @@
         </div>
       </section>
 
-      <!-- TAB: Chat Imersivo -->
-      <section class="tab-panel" id="tab-chat">
-        <div class="chat-container">
-          <div class="chat-messages" id="chat-messages">
-            <!-- Mensagem de Boas-vindas Inicial -->
-            <div class="message-bubble message-assistant">
-              <div class="avatar"><i class="fa-solid fa-robot"></i></div>
-              <div class="bubble-body">
-                <div class="bubble-header">
-                  <strong>Victoria Copilot</strong>
-                  <small>Agora</small>
-                </div>
-                <div class="bubble-content">
-                  <p>Olá, Maychel! Sou a <strong>Victoria</strong>, sua Copilot Executiva conectada ao <strong>Business OS</strong>.</p>
-                  <p>Posso te ajudar com análises de anúncios, vendas das lojas, reuniões do Google Meet ou agendamentos.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chat Input Area -->
-          <div class="chat-input-wrapper">
-            <form id="chat-form" class="chat-form">
-              <textarea 
-                id="chat-input" 
-                rows="1" 
-                placeholder="Digite sua mensagem para a Victoria... (Pressione Enter para enviar)"
-                required
-              ></textarea>
-              <button type="submit" class="btn btn-primary btn-send" id="btn-send">
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
 
       <!-- TAB 2: Agenda & Tarefas -->
       <section class="tab-panel" id="tab-tasks">
@@ -492,347 +441,390 @@
         </div>
       </section>
 
-      <!-- TAB 3: Memória de Longo Prazo -->
-      <section class="tab-panel" id="tab-memories">
-        <div class="panel-header-actions">
-          <p class="description-text">
-            Fatos e informações que a IA utiliza para personalizar o contexto e lembrar suas preferências.
-          </p>
-          <button class="btn btn-primary btn-sm" id="btn-new-memory">
-            <i class="fa-solid fa-plus"></i> Adicionar Memória
-          </button>
+      <!-- TAB: Configurações & Governança (Página Única em Seções) -->
+      <section class="tab-panel" id="tab-settings">
+        <!-- Quick Jump Section Pills -->
+        <div class="settings-nav-pills" style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; position: sticky; top: -28px; z-index: 5; background: var(--color-sand); padding: 8px 0; border-bottom: 1px solid var(--color-sand-border);">
+          <a href="#settings-costs" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-coins"></i> Custos e Usos</a>
+          <a href="#settings-memories" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-brain"></i> Memória</a>
+          <a href="#settings-logs" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-terminal"></i> Terminal de Logs</a>
+          <a href="#settings-system" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-sliders"></i> Sistema & Preferências</a>
         </div>
 
-        <div class="memories-grid" id="memories-grid">
-          <!-- Carregado via JS -->
-        </div>
-      </section>
-
-      <!-- TAB 4: Uso & Gastos de IA -->
-      <section class="tab-panel" id="tab-ai-hub">
-        <!-- 4 Ultra-Premium FinOps KPI Cards -->
-        <div class="finops-kpi-grid">
-          <!-- Card 1: Gasto Total -->
-          <div class="finops-card card-gold">
-            <div class="finops-card-top">
-              <h4>Gasto Total Estimado</h4>
-              <div class="finops-icon icon-gold">
-                <i class="fa-solid fa-dollar-sign"></i>
-              </div>
-            </div>
-            <div>
-              <div class="finops-val-hero val-gold" id="stat-total-cost-usd">$0.00000 USD</div>
-              <div class="finops-sub-detail">
-                <i class="fa-solid fa-globe"></i>
-                <span id="stat-total-cost-sub">Total acumulado em Dólar</span>
-              </div>
-            </div>
+        <!-- SEÇÃO 1: CUSTOS E USOS -->
+        <div class="settings-section" id="settings-costs" style="margin-bottom: 36px;">
+          <div class="settings-section-header" style="margin-bottom: 18px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-coins" style="color: var(--color-mint);"></i> Custos e Usos de IA
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--color-slate); margin: 4px 0 0 0;">
+              Monitoramento granular de tokens consumidos, áudios STT e extrato de chamadas do DeepSeek & OpenAI.
+            </p>
           </div>
 
-          <!-- Card 2: Tokens Totais -->
-          <div class="finops-card card-violet">
-            <div class="finops-card-top">
-              <h4>Tokens Processados</h4>
-              <div class="finops-icon icon-violet">
-                <i class="fa-solid fa-bolt"></i>
+          <!-- 4 Ultra-Premium FinOps KPI Cards -->
+          <div class="finops-kpi-grid">
+            <!-- Card 1: Gasto Total -->
+            <div class="finops-card card-gold">
+              <div class="finops-card-top">
+                <h4>Gasto Total Estimado</h4>
+                <div class="finops-icon icon-gold">
+                  <i class="fa-solid fa-dollar-sign"></i>
+                </div>
               </div>
-            </div>
-            <div>
-              <div class="finops-val-hero val-violet" id="stat-total-tokens">0</div>
-              <div class="finops-sub-detail" id="stat-tokens-breakdown">
-                Entrada: 0 • Saída: 0
-              </div>
-            </div>
-            <div class="ratio-meter">
-              <div class="ratio-bar">
-                <div class="ratio-fill-in" id="ratio-bar-in" style="width: 50%;"></div>
-                <div class="ratio-fill-out" id="ratio-bar-out" style="width: 50%;"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 3: Áudios Whisper -->
-          <div class="finops-card card-emerald">
-            <div class="finops-card-top">
-              <h4>Transcrição de Voz</h4>
-              <div class="finops-icon icon-emerald">
-                <i class="fa-solid fa-microphone-lines"></i>
-              </div>
-            </div>
-            <div>
-              <div class="finops-val-hero val-emerald" id="stat-total-audios">0 áudios</div>
-              <div class="finops-sub-detail">
-                <i class="fa-regular fa-clock"></i>
-                <span id="stat-audio-minutes">0.0 min de voz</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 4: Total de Requisições -->
-          <div class="finops-card card-cyan">
-            <div class="finops-card-top">
-              <h4>Total de Requisições</h4>
-              <div class="finops-icon icon-cyan">
-                <i class="fa-solid fa-layer-group"></i>
-              </div>
-            </div>
-            <div>
-              <div class="finops-val-hero val-cyan" id="stat-total-requests">0</div>
-              <div class="finops-sub-detail" id="stat-requests-breakdown">
-                Chat: 0 • Áudio: 0
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2-Column Analytics Section: Onde gasta mais & Modelos -->
-        <div class="finops-analytics-row">
-          <!-- Coluna 1: Onde você gasta mais (Por Categoria) -->
-          <div class="finops-panel-box">
-            <div class="finops-panel-box-header">
               <div>
-                <h3><i class="fa-solid fa-chart-pie" style="color: #F59E0B;"></i> Gastos por Categoria</h3>
-                <p>Onde a IA consome mais recursos e ferramentas</p>
+                <div class="finops-val-hero val-gold" id="stat-total-cost-usd">$0.00000 USD</div>
+                <div class="finops-sub-detail">
+                  <i class="fa-solid fa-globe"></i>
+                  <span id="stat-total-cost-sub">Total acumulado em Dólar</span>
+                </div>
               </div>
-              <span class="badge-model"><i class="fa-solid fa-fire"></i> Distribuição</span>
             </div>
-            <div class="category-progress-list" id="categories-usage-grid">
-              <!-- Carregado via JS -->
-            </div>
-          </div>
 
-          <!-- Coluna 2: Modelos & Provedores de IA -->
-          <div class="finops-panel-box">
-            <div class="finops-panel-box-header">
+            <!-- Card 2: Tokens Totais -->
+            <div class="finops-card card-violet">
+              <div class="finops-card-top">
+                <h4>Tokens Processados</h4>
+                <div class="finops-icon icon-violet">
+                  <i class="fa-solid fa-bolt"></i>
+                </div>
+              </div>
               <div>
-                <h3><i class="fa-solid fa-microchip" style="color: #818CF8;"></i> Modelos & Provedores</h3>
-                <p>Desempenho e custos por arquitetura de LLM/STT</p>
+                <div class="finops-val-hero val-violet" id="stat-total-tokens">0</div>
+                <div class="finops-sub-detail" id="stat-tokens-breakdown">
+                  Entrada: 0 • Saída: 0
+                </div>
               </div>
-              <span class="badge-model"><i class="fa-solid fa-server"></i> Ativos</span>
+              <div class="ratio-meter">
+                <div class="ratio-bar">
+                  <div class="ratio-fill-in" id="ratio-bar-in" style="width: 50%;"></div>
+                  <div class="ratio-fill-out" id="ratio-bar-out" style="width: 50%;"></div>
+                </div>
+              </div>
             </div>
-            <div class="models-list-stack" id="models-usage-grid">
-              <!-- Carregado via JS -->
+
+            <!-- Card 3: Áudios Whisper -->
+            <div class="finops-card card-emerald">
+              <div class="finops-card-top">
+                <h4>Transcrição de Voz</h4>
+                <div class="finops-icon icon-emerald">
+                  <i class="fa-solid fa-microphone-lines"></i>
+                </div>
+              </div>
+              <div>
+                <div class="finops-val-hero val-emerald" id="stat-total-audios">0 áudios</div>
+                <div class="finops-sub-detail">
+                  <i class="fa-regular fa-clock"></i>
+                  <span id="stat-audio-minutes">0.0 min de voz</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Total de Requisições -->
+            <div class="finops-card card-cyan">
+              <div class="finops-card-top">
+                <h4>Total de Requisições</h4>
+                <div class="finops-icon icon-cyan">
+                  <i class="fa-solid fa-layer-group"></i>
+                </div>
+              </div>
+              <div>
+                <div class="finops-val-hero val-cyan" id="stat-total-requests">0</div>
+                <div class="finops-sub-detail" id="stat-requests-breakdown">
+                  Chat: 0 • Áudio: 0
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Column Analytics Section: Onde gasta mais & Modelos -->
+          <div class="finops-analytics-row">
+            <!-- Coluna 1: Onde você gasta mais (Por Categoria) -->
+            <div class="finops-panel-box">
+              <div class="finops-panel-box-header">
+                <div>
+                  <h3><i class="fa-solid fa-chart-pie" style="color: #F59E0B;"></i> Gastos por Categoria</h3>
+                  <p>Onde a IA consome mais recursos e ferramentas</p>
+                </div>
+                <span class="badge-model"><i class="fa-solid fa-fire"></i> Distribuição</span>
+              </div>
+              <div class="category-progress-list" id="categories-usage-grid">
+                <!-- Carregado via JS -->
+              </div>
+            </div>
+
+            <!-- Coluna 2: Modelos & Provedores de IA -->
+            <div class="finops-panel-box">
+              <div class="finops-panel-box-header">
+                <div>
+                  <h3><i class="fa-solid fa-microchip" style="color: #818CF8;"></i> Modelos & Provedores</h3>
+                  <p>Desempenho e custos por arquitetura de LLM/STT</p>
+                </div>
+                <span class="badge-model"><i class="fa-solid fa-server"></i> Ativos</span>
+              </div>
+              <div class="models-list-stack" id="models-usage-grid">
+                <!-- Carregado via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Ranking: Top Requisições & Perguntas Mais Caras -->
+          <div class="finops-table-container">
+            <div class="finops-table-header">
+              <div>
+                <h3><i class="fa-solid fa-ranking-star" style="color: #FBBF24;"></i> Maiores Gastos por Solicitação / Pergunta</h3>
+                <p style="color: var(--text-dim); font-size: 0.8rem; margin: 2px 0 0 0;">Agrupamento consolidado de todas as etapas, buscas e chamadas gastas para cada pedido</p>
+              </div>
+              <span class="currency-pill"><i class="fa-solid fa-trophy"></i> Top Consumos</span>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="finops-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">Rank</th>
+                    <th>Solicitação do Usuário</th>
+                    <th>Categoria</th>
+                    <th>Origem</th>
+                    <th>Etapas</th>
+                    <th>Tokens</th>
+                    <th style="text-align: right;">Custo Estimado</th>
+                  </tr>
+                </thead>
+                <tbody id="top-interactions-body">
+                  <tr>
+                    <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-dim);">
+                      Nenhuma solicitação agrupada registrada ainda.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Telemetria: Extrato Detalhado de Chamadas -->
+          <div class="finops-table-container">
+            <div class="finops-table-header">
+              <div>
+                <h3><i class="fa-solid fa-receipt" style="color: #34D399;"></i> Extrato Detalhado de Chamadas (Telemetria)</h3>
+                <p style="color: var(--text-dim); font-size: 0.8rem; margin: 2px 0 0 0;">Histórico granular de cada transação de IA em milissegundos</p>
+              </div>
+              <div class="table-filter-pills" id="log-filter-pills">
+                <button class="table-pill-btn active" data-log-filter="ALL">Todas</button>
+                <button class="table-pill-btn" data-log-filter="chat">Chat LLM</button>
+                <button class="table-pill-btn" data-log-filter="transcription">Áudio STT</button>
+              </div>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="finops-table" id="usage-logs-table">
+                <thead>
+                  <tr>
+                    <th>Horário</th>
+                    <th>Modelo & Provedor</th>
+                    <th>Operação</th>
+                    <th>Canal</th>
+                    <th>Consumo</th>
+                    <th>Latência</th>
+                    <th style="text-align: right;">Custo</th>
+                  </tr>
+                </thead>
+                <tbody id="usage-logs-body">
+                  <tr>
+                    <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-dim);">
+                      Nenhum registro de uso ainda. Envie uma mensagem ou áudio para começar a monitorar.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <!-- Ranking: Top Requisições & Perguntas Mais Caras -->
-        <div class="finops-table-container">
-          <div class="finops-table-header">
+        <!-- SEÇÃO 2: MEMÓRIA CORPORATIVA -->
+        <div class="settings-section" id="settings-memories" style="margin-bottom: 36px; padding-top: 28px; border-top: 1px solid var(--color-sand-border);">
+          <div class="settings-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h3><i class="fa-solid fa-ranking-star" style="color: #FBBF24;"></i> Maiores Gastos por Solicitação / Pergunta</h3>
-              <p style="color: var(--text-dim); font-size: 0.8rem; margin: 2px 0 0 0;">Agrupamento consolidado de todas as etapas, buscas e chamadas gastas para cada pedido</p>
-            </div>
-            <span class="currency-pill"><i class="fa-solid fa-trophy"></i> Top Consumos</span>
-          </div>
-          <div style="overflow-x: auto;">
-            <table class="finops-table">
-              <thead>
-                <tr>
-                  <th style="width: 50px;">Rank</th>
-                  <th>Solicitação do Usuário</th>
-                  <th>Categoria</th>
-                  <th>Origem</th>
-                  <th>Etapas</th>
-                  <th>Tokens</th>
-                  <th style="text-align: right;">Custo Estimado</th>
-                </tr>
-              </thead>
-              <tbody id="top-interactions-body">
-                <tr>
-                  <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-dim);">
-                    Nenhuma solicitação agrupada registrada ainda.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Telemetria: Extrato Detalhado de Chamadas -->
-        <div class="finops-table-container">
-          <div class="finops-table-header">
-            <div>
-              <h3><i class="fa-solid fa-receipt" style="color: #34D399;"></i> Extrato Detalhado de Chamadas (Telemetria)</h3>
-              <p style="color: var(--text-dim); font-size: 0.8rem; margin: 2px 0 0 0;">Histórico granular de cada transação de IA em milissegundos</p>
-            </div>
-            <div class="table-filter-pills" id="log-filter-pills">
-              <button class="table-pill-btn active" data-log-filter="ALL">Todas</button>
-              <button class="table-pill-btn" data-log-filter="chat">Chat LLM</button>
-              <button class="table-pill-btn" data-log-filter="transcription">Áudio STT</button>
-            </div>
-          </div>
-          <div style="overflow-x: auto;">
-            <table class="finops-table" id="usage-logs-table">
-              <thead>
-                <tr>
-                  <th>Horário</th>
-                  <th>Modelo & Provedor</th>
-                  <th>Operação</th>
-                  <th>Canal</th>
-                  <th>Consumo</th>
-                  <th>Latência</th>
-                  <th style="text-align: right;">Custo</th>
-                </tr>
-              </thead>
-              <tbody id="usage-logs-body">
-                <tr>
-                  <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-dim);">
-                    Nenhum registro de uso ainda. Envie uma mensagem ou áudio para começar a monitorar.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 5: Status do Sistema & Configurações -->
-      <section class="tab-panel" id="tab-system">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon icon-purple"><i class="fa-solid fa-microchip"></i></div>
-            <div class="stat-content">
-              <h3>Modelo de IA</h3>
-              <p class="stat-value" id="sys-model">DeepSeek-V4-Flash</p>
-              <small class="stat-detail">Provedor Ativo</small>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon icon-emerald"><i class="fa-solid fa-database"></i></div>
-            <div class="stat-content">
-              <h3>MariaDB</h3>
-              <p class="stat-value" id="sys-db">Conectado</p>
-              <small class="stat-detail">Prisma ORM 6.4</small>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon icon-blue"><i class="fa-solid fa-bolt"></i></div>
-            <div class="stat-content">
-              <h3>Framework API</h3>
-              <p class="stat-value">Fastify 5</p>
-              <small class="stat-detail" id="sys-uptime">Uptime: 0s</small>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon icon-amber"><i class="fa-solid fa-code-branch"></i></div>
-            <div class="stat-content">
-              <h3>Branch & Commit</h3>
-              <p class="stat-value" id="sys-branch">
-                <span>sub</span>
-                <span class="commit-badge" id="sys-commit-badge">#d50d714</span>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-brain" style="color: var(--color-amber);"></i> Memória Corporativa
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--color-slate); margin: 4px 0 0 0;">
+                Fatos, regras e preferências memorizadas pela IA para enriquecer o contexto de atendimento.
               </p>
-              <small class="stat-detail commit-detail" id="sys-commit" title="Commit: -">-</small>
             </div>
+            <button class="btn btn-primary btn-sm" id="btn-new-memory" onclick="openModal('modal-memory')">
+              <i class="fa-solid fa-plus"></i> Adicionar Memória
+            </button>
+          </div>
+
+          <div class="memories-grid" id="memories-grid">
+            <!-- Carregado via JS -->
           </div>
         </div>
 
-        <div style="margin-top: 32px;">
-          <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">
-            <i class="fa-solid fa-sliders" style="color: #818CF8; margin-right: 6px;"></i> Preferências da Interface
-          </h3>
-          <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 12px;">
-            Personalize o que é exibido nas mensagens e no chat com a Victoria.
-          </p>
-
-          <div class="switch-container">
-            <div class="switch-label-group">
-              <strong>Exibir Ferramentas Executadas (Badges de Debug)</strong>
-              <small>Mostra pequenos crachás quando a Victoria aciona ferramentas de WhatsApp, tarefas ou memória.</small>
-            </div>
-            <label class="custom-switch">
-              <input type="checkbox" id="toggle-tool-badges">
-              <span class="slider"></span>
-            </label>
+        <!-- SEÇÃO 3: TERMINAL DE LOGS -->
+        <div class="settings-section" id="settings-logs" style="margin-bottom: 36px; padding-top: 28px; border-top: 1px solid var(--color-sand-border);">
+          <div class="settings-section-header" style="margin-bottom: 18px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-terminal" style="color: #818CF8;"></i> Terminal de Logs
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--color-slate); margin: 4px 0 0 0;">
+              Monitoramento ao vivo de eventos do WhatsApp, execuções do sistema e webhooks.
+            </p>
           </div>
-        </div>
-      </section>
 
-      <!-- TAB 6: Logs do Sistema em Tempo Real -->
-      <section class="tab-panel" id="tab-logs">
-        <!-- Floating Glass Log Control Bar -->
-        <div class="logs-toolbar-card">
-          <div class="logs-toolbar-row">
-            <!-- Left: Category Pills -->
-            <div class="logs-pills-group" id="logs-category-pills">
-              <button class="log-pill-btn active" data-log-cat="all">
-                <i class="fa-solid fa-list-ul"></i> Todos
-              </button>
-              <button class="log-pill-btn" data-log-cat="whatsapp">
-                <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> WhatsApp
-              </button>
-              <button class="log-pill-btn" data-log-cat="agent">
-                <i class="fa-solid fa-robot" style="color: #818CF8;"></i> Victoria IA
-              </button>
-              <button class="log-pill-btn" data-log-cat="webhook">
-                <i class="fa-solid fa-cloud-arrow-down" style="color: #38BDF8;"></i> Webhooks
-              </button>
-              <button class="log-pill-btn" data-log-cat="deploy">
-                <i class="fa-solid fa-rocket" style="color: #F59E0B;"></i> Deploy
-              </button>
-              <button class="log-pill-btn" data-log-cat="system">
-                <i class="fa-solid fa-server" style="color: #A78BFA;"></i> Sistema
-              </button>
-            </div>
-
-            <!-- Right: Actions & Tools -->
-            <div class="logs-actions-group">
-              <select class="logs-select" id="logs-level-filter">
-                <option value="all">⚡ Todos os Níveis</option>
-                <option value="info">ℹ️ INFO</option>
-                <option value="success">✅ SUCCESS</option>
-                <option value="warn">⚠️ WARN</option>
-                <option value="error">❌ ERROR</option>
-              </select>
-
-              <div class="logs-search">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="logs-search-input" placeholder="Filtrar eventos..." />
+          <!-- Floating Glass Log Control Bar -->
+          <div class="logs-toolbar-card">
+            <div class="logs-toolbar-row">
+              <!-- Left: Category Pills -->
+              <div class="logs-pills-group" id="logs-category-pills">
+                <button class="log-pill-btn active" data-log-cat="all">
+                  <i class="fa-solid fa-list-ul"></i> Todos
+                </button>
+                <button class="log-pill-btn" data-log-cat="whatsapp">
+                  <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> WhatsApp
+                </button>
+                <button class="log-pill-btn" data-log-cat="agent">
+                  <i class="fa-solid fa-robot" style="color: #818CF8;"></i> Victoria IA
+                </button>
+                <button class="log-pill-btn" data-log-cat="webhook">
+                  <i class="fa-solid fa-cloud-arrow-down" style="color: #38BDF8;"></i> Webhooks
+                </button>
+                <button class="log-pill-btn" data-log-cat="deploy">
+                  <i class="fa-solid fa-rocket" style="color: #F59E0B;"></i> Deploy
+                </button>
+                <button class="log-pill-btn" data-log-cat="system">
+                  <i class="fa-solid fa-server" style="color: #A78BFA;"></i> Sistema
+                </button>
               </div>
 
-              <button class="btn btn-secondary btn-sm" id="btn-toggle-live-logs" title="Pausar/Retomar fluxo">
-                <span class="live-dot" id="live-logs-dot"></span>
-                <span id="live-logs-label">Ao Vivo</span>
-              </button>
+              <!-- Right: Actions & Tools -->
+              <div class="logs-actions-group">
+                <select class="logs-select" id="logs-level-filter">
+                  <option value="all">⚡ Todos os Níveis</option>
+                  <option value="info">ℹ️ INFO</option>
+                  <option value="success">✅ SUCCESS</option>
+                  <option value="warn">⚠️ WARN</option>
+                  <option value="error">❌ ERROR</option>
+                </select>
 
-              <button class="btn btn-secondary btn-sm" id="btn-sync-webhook" title="Sincronizar Webhook Evolution">
-                <i class="fa-solid fa-link"></i> Sync Webhook
-              </button>
+                <div class="logs-search">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="logs-search-input" placeholder="Filtrar eventos..." />
+                </div>
 
-              <button class="btn btn-secondary btn-sm" id="btn-copy-logs" title="Copiar logs visíveis">
-                <i class="fa-regular fa-copy"></i>
-              </button>
+                <button class="btn btn-secondary btn-sm" id="btn-toggle-live-logs" title="Pausar/Retomar fluxo">
+                  <span class="live-dot" id="live-logs-dot"></span>
+                  <span id="live-logs-label">Ao Vivo</span>
+                </button>
 
-              <button class="btn btn-secondary btn-sm" id="btn-clear-logs" title="Limpar histórico de logs">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
+                <button class="btn btn-secondary btn-sm" id="btn-sync-webhook" title="Sincronizar Webhook Evolution">
+                  <i class="fa-solid fa-link"></i> Sync Webhook
+                </button>
+
+                <button class="btn btn-secondary btn-sm" id="btn-copy-logs" title="Copiar logs visíveis">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+
+                <button class="btn btn-secondary btn-sm" id="btn-clear-logs" title="Limpar histórico de logs">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminal Stream Container -->
+          <div class="logs-terminal-frame">
+            <div class="logs-terminal-topbar">
+              <div class="logs-mac-dots">
+                <span class="mac-dot mac-red"></span>
+                <span class="mac-dot mac-yellow"></span>
+                <span class="mac-dot mac-green"></span>
+              </div>
+              <div class="logs-terminal-name">
+                <i class="fa-solid fa-terminal" style="color: #818CF8;"></i> victoria@server:~ (Live Telemetry Stream)
+              </div>
+              <div class="logs-terminal-counter" id="logs-stream-stats">
+                Total: 0 logs
+              </div>
+            </div>
+
+            <div class="logs-terminal-console" id="logs-terminal-body">
+              <div class="logs-empty-state" id="logs-empty-state">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.6rem; color: #818CF8; margin-bottom: 10px;"></i>
+                <p>Carregando telemetria e registros do servidor...</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Terminal Stream Container -->
-        <div class="logs-terminal-frame">
-          <div class="logs-terminal-topbar">
-            <div class="logs-mac-dots">
-              <span class="mac-dot mac-red"></span>
-              <span class="mac-dot mac-yellow"></span>
-              <span class="mac-dot mac-green"></span>
+        <!-- SEÇÃO 4: STATUS DO SISTEMA & PREFERÊNCIAS -->
+        <div class="settings-section" id="settings-system" style="padding-top: 28px; border-top: 1px solid var(--color-sand-border);">
+          <div class="settings-section-header" style="margin-bottom: 18px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-sliders" style="color: var(--color-cyprus);"></i> Status do Sistema & Preferências
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--color-slate); margin: 4px 0 0 0;">
+              Infraestrutura de microsserviços, conectividade de banco e opções da interface.
+            </p>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon icon-purple"><i class="fa-solid fa-microchip"></i></div>
+              <div class="stat-content">
+                <h3>Modelo de IA</h3>
+                <p class="stat-value" id="sys-model">DeepSeek-V4-Flash</p>
+                <small class="stat-detail">Provedor Ativo</small>
+              </div>
             </div>
-            <div class="logs-terminal-name">
-              <i class="fa-solid fa-terminal" style="color: #818CF8;"></i> victoria@server:~ (Live Telemetry Stream)
+
+            <div class="stat-card">
+              <div class="stat-icon icon-emerald"><i class="fa-solid fa-database"></i></div>
+              <div class="stat-content">
+                <h3>MariaDB</h3>
+                <p class="stat-value" id="sys-db">Conectado</p>
+                <small class="stat-detail">Prisma ORM 6.4</small>
+              </div>
             </div>
-            <div class="logs-terminal-counter" id="logs-stream-stats">
-              Total: 0 logs
+
+            <div class="stat-card">
+              <div class="stat-icon icon-blue"><i class="fa-solid fa-bolt"></i></div>
+              <div class="stat-content">
+                <h3>Framework API</h3>
+                <p class="stat-value">Fastify 5</p>
+                <small class="stat-detail" id="sys-uptime">Uptime: 0s</small>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon icon-amber"><i class="fa-solid fa-code-branch"></i></div>
+              <div class="stat-content">
+                <h3>Branch & Commit</h3>
+                <p class="stat-value" id="sys-branch">
+                  <span>sub</span>
+                  <span class="commit-badge" id="sys-commit-badge">#d50d714</span>
+                </p>
+                <small class="stat-detail commit-detail" id="sys-commit" title="Commit: -">-</small>
+              </div>
             </div>
           </div>
 
-          <div class="logs-terminal-console" id="logs-terminal-body">
-            <div class="logs-empty-state" id="logs-empty-state">
-              <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.6rem; color: #818CF8; margin-bottom: 10px;"></i>
-              <p>Carregando telemetria e registros do servidor...</p>
+          <div style="margin-top: 24px;">
+            <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">
+              <i class="fa-solid fa-sliders" style="color: #818CF8; margin-right: 6px;"></i> Preferências da Interface
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 12px;">
+              Personalize o que é exibido nas mensagens e nas interações com a IA.
+            </p>
+
+            <div class="switch-container">
+              <div class="switch-label-group">
+                <strong>Exibir Ferramentas Executadas (Badges de Debug)</strong>
+                <small>Mostra pequenos crachás quando a IA aciona ferramentas de WhatsApp, tarefas ou memória.</small>
+              </div>
+              <label class="custom-switch">
+                <input type="checkbox" id="toggle-tool-badges">
+                <span class="slider"></span>
+              </label>
             </div>
           </div>
         </div>

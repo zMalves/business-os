@@ -22,16 +22,13 @@ const memoriesGrid = document.getElementById('memories-grid');
 
 const tabTitles = {
   dashboard: { title: 'Visão Geral Executiva', sub: 'Centro de comando dos seus negócios, tráfego, vendas e agenda.' },
+  'meta-business': { title: 'Meta Ads & Growth Hub', sub: 'Gerenciamento de contas de anúncios, tráfego pago e métricas consolidadas.' },
   ecommerce: { title: 'Operações & Lojas', sub: 'Faturamento consolidado, expedição e monitoramento do Mercado Livre.' },
-  skills: { title: 'Dynamic Skills Engine', sub: 'Catálogo de habilidades compostas e execução com validação em tempo real.' },
-  webhooks: { title: 'Webhooks & Hub de Workers', sub: 'Gerenciamento de eventos externos e integrações de automação.' },
-  tasks: { title: 'Google Suite & Gerenciador de Tarefas', sub: 'Acompanhe compromissos, Google Calendar, Meet e pendências.' },
-  memories: { title: 'Memória Corporativa', sub: 'Fatos, regras de negócio e preferências memorizadas pela IA.' },
-  'ai-hub': { title: 'Finanças & Custos de IA', sub: 'Monitoramento detalhado de tokens consumidos, áudios e custos em R$.' },
-  'meta-business': { title: 'Meta Ads & Growth Hub', sub: 'Gerenciamento de múltiplas BMs, tráfego pago e criativos com a Victoria.' },
-  logs: { title: 'Terminal de Logs em Tempo Real', sub: 'Monitoramento ao vivo de eventos do WhatsApp, execuções e webhooks.' },
-  system: { title: 'Configurações do Sistema', sub: 'Preferências de exibição e monitoramento dos serviços.' },
-  chat: { title: 'Chat Imersivo com a Victoria', sub: 'Converse em tela cheia com a sua Copilot Executiva.' }
+  tasks: { title: 'Tarefas & Agenda', sub: 'Acompanhe compromissos, Google Calendar, Meet e pendências.' },
+  skills: { title: 'Dynamic Skills Engine', sub: 'Catálogo de habilidades compostas e rotinas operacionais autônomas.' },
+  webhooks: { title: 'Webhooks & Hub de Eventos', sub: 'Gerenciamento de eventos externos e integrações de automação.' },
+  settings: { title: 'Configurações & Governança', sub: 'Custos e usos de IA, memória corporativa, terminal de logs e preferências.' },
+  system: { title: 'Configurações & Governança', sub: 'Custos e usos de IA, memória corporativa, terminal de logs e preferências.' },
 };
 
 // Authentication Management
@@ -163,6 +160,16 @@ function setupNavigation() {
 }
 
 function switchTab(tab) {
+  let targetScrollSection = null;
+  // Aliases for legacy section references
+  if (['ai-hub', 'memories', 'logs', 'system', 'settings'].includes(tab)) {
+    if (tab === 'ai-hub') targetScrollSection = 'settings-costs';
+    else if (tab === 'memories') targetScrollSection = 'settings-memories';
+    else if (tab === 'logs') targetScrollSection = 'settings-logs';
+    else if (tab === 'system') targetScrollSection = 'settings-system';
+    tab = 'settings';
+  }
+
   currentTab = tab;
   navItems.forEach(nav => {
     nav.classList.toggle('active', nav.dataset.tab === tab);
@@ -181,15 +188,25 @@ function switchTab(tab) {
   if (tab === 'skills') fetchSkillsCatalog();
   if (tab === 'meta-business') fetchMetaBusinessData();
   if (tab === 'tasks') fetchTasks();
-  if (tab === 'memories') fetchMemories();
-  if (tab === 'ai-hub') {
+  if (tab === 'webhooks') {
+    // webhooks tab data
+  }
+  if (tab === 'settings') {
     fetchAiUsageStats();
     startUsagePolling();
+    fetchMemories();
+    fetchLogs();
+    fetchHealth();
+
+    if (targetScrollSection) {
+      setTimeout(() => {
+        const el = document.getElementById(targetScrollSection);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    }
   } else {
     stopUsagePolling();
   }
-  if (tab === 'logs') fetchLogs();
-  if (tab === 'system') fetchHealth();
 }
 window.switchTab = switchTab;
 
