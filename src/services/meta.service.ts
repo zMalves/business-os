@@ -43,24 +43,32 @@ export class MetaService {
   private defaultRedirectUri: string;
 
   constructor() {
-    const appId = process.env.META_APP_ID || process.env.FACEBOOK_APP_ID;
-    const appSecret = process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET;
+    this.appId = process.env.META_APP_ID || process.env.FACEBOOK_APP_ID || '';
+    this.appSecret = process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET || '';
 
-    if (!appId || !appSecret) {
-      throw new Error(
-        '[MetaService] META_APP_ID e META_APP_SECRET são obrigatórios. ' +
-        'Defina-os no arquivo .env do servidor (nunca hardcode credenciais no código).'
-      );
+    if (!this.appId || !this.appSecret) {
+      loggerService.system('⚠️ [MetaService] META_APP_ID ou META_APP_SECRET não definidos no .env. Funcionalidades da Meta ficarão desabilitadas até serem preenchidas.');
     }
-
-    this.appId = appId;
-    this.appSecret = appSecret;
 
     const envRedirect = process.env.META_REDIRECT_URI;
     this.defaultRedirectUri =
       envRedirect && !envRedirect.includes('secretary.malves.dev.br')
         ? envRedirect
         : `${(process.env.WEBHOOK_BASE_URL || 'https://b-os.malves.dev.br').replace(/\/$/, '')}/api/auth/meta/callback`;
+  }
+
+  private ensureConfigured(): void {
+    const appId = this.appId || process.env.META_APP_ID || process.env.FACEBOOK_APP_ID;
+    const appSecret = this.appSecret || process.env.META_APP_SECRET || process.env.FACEBOOK_APP_SECRET;
+
+    if (!appId || !appSecret) {
+      throw new Error(
+        '[MetaService] META_APP_ID e META_APP_SECRET são obrigatórios. ' +
+        'Defina-os no arquivo .env do servidor.'
+      );
+    }
+    this.appId = appId;
+    this.appSecret = appSecret;
   }
 
 
@@ -220,6 +228,7 @@ export class MetaService {
   // =========================================================================
 
   getMetaAuthUrl(redirectUri?: string, state?: string): string {
+    this.ensureConfigured();
     const targetRedirect = redirectUri || this.defaultRedirectUri;
     const scopeStr = encodeURIComponent(META_SCOPES.join(','));
     let url = `https://www.facebook.com/${GRAPH_API_VERSION}/dialog/oauth?client_id=${this.appId}&redirect_uri=${encodeURIComponent(targetRedirect)}&scope=${scopeStr}&response_type=code`;
@@ -230,6 +239,7 @@ export class MetaService {
   }
 
   getInstagramAuthUrl(redirectUri?: string, state?: string): string {
+    this.ensureConfigured();
     const targetRedirect = redirectUri || this.defaultRedirectUri;
     // Instagram Graph API via Meta OAuth com escopos focados em Instagram
     const scopes = ['instagram_basic', 'instagram_manage_insights', 'pages_show_list', 'pages_read_engagement', 'public_profile', 'email'];
@@ -241,6 +251,7 @@ export class MetaService {
   }
 
   async handleMetaCallback(code: string, redirectUri?: string, provider = 'meta') {
+    this.ensureConfigured();
     const targetRedirect = redirectUri || this.defaultRedirectUri;
 
     try {
