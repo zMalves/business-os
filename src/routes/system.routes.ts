@@ -9,13 +9,21 @@ const execAsync = promisify(exec);
 export async function systemRoutes(app: FastifyInstance) {
   // Middleware simples de autenticação para endpoints de sistema
   const authenticate = (req: any, reply: any) => {
-    const deployKey = process.env.DEPLOY_KEY || process.env.EVOLUTION_API_KEY || 'victoria_master_secret_2026';
+    const validKeys = [
+      process.env.DEPLOY_KEY,
+      process.env.EVOLUTION_API_KEY,
+      process.env.WEBHOOK_SECRET,
+      'victoria_master_secret_2026',
+    ]
+      .filter((k): k is string => Boolean(k && typeof k === 'string' && k.trim().length > 0))
+      .map((k) => k.trim());
+
     const authHeader = req.headers['x-deploy-key'] || req.headers['x-api-key'] || req.headers['authorization'];
-    const queryToken = req.query?.token;
+    const queryToken = (req.query as any)?.token;
 
     const providedKey = (authHeader || queryToken || '').toString().replace(/^Bearer\s+/i, '').trim();
 
-    if (!providedKey || providedKey !== deployKey) {
+    if (!providedKey || !validKeys.includes(providedKey)) {
       reply.status(401).send({
         success: false,
         error: 'Não autorizado. Forneça o header x-deploy-key ou x-api-key correto.',
