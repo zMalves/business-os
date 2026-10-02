@@ -2824,11 +2824,12 @@ async function fetchDashboardOverview() {
       .then(r => r.json())
       .then(d => {
         if (d.success && d.stats) {
-          const costBrl = d.stats.totalCostBrl || 0;
-          const tokens = d.stats.totalTokens || 0;
+          const summary = d.stats.summary || d.stats;
+          const costUsd = summary.totalCostUsd || 0;
+          const tokens = summary.totalTokens || 0;
           const costEl = document.getElementById('dash-ai-cost');
           const tokEl = document.getElementById('dash-ai-tokens');
-          if (costEl) costEl.textContent = `R$ ${costBrl.toFixed(2)}`;
+          if (costEl) costEl.textContent = `$${costUsd.toFixed(5)} USD`;
           if (tokEl) tokEl.innerHTML = `<i class="fa-solid fa-coins"></i> ${tokens.toLocaleString('pt-BR')} tokens (30d)`;
         }
       })
