@@ -84,6 +84,9 @@ async function main() {
   const RATE_LIMIT_WINDOW = 60 * 1000;
 
   app.addHook('onRequest', async (req, reply) => {
+    // Bloqueia qualquer tipo de indexação ou rastreamento por motores de busca (Google, Bing, etc)
+    reply.header('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+
     // Isenta webhooks do WhatsApp, webhooks de notificação/integração e deploys com chave
     if (
       req.url.startsWith('/api/whatsapp/webhook') ||
