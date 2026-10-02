@@ -1,178 +1,184 @@
-# 🚀 Guia de Atualização do Servidor & Gerenciamento Docker
+# 🚀 Guia de Atualização do Servidor & Deploy Automatizado
 ### **Victoria Copilot — Business OS (Executive AI Workspace)**
 
-Este guia detalha como atualizar o Business OS em produção, como acionar deploys automáticos via **HTTP** ou **Git**, e as regras claras sobre **quando e como reiniciar os containers Docker**.
+Este guia detalha o funcionamento e os métodos de atualização do **Business OS** em produção, as rotinas de **Auto-Deploy Remoto**, e as boas práticas de operação dos containers Docker.
 
 ---
 
 ## 📌 Sumário Rápido
 
 1. [Os 3 Métodos de Atualização](#-1-os-3-métodos-de-atualização)
-2. [Método 1: Atualização via HTTP (Auto-Deploy Remoto)](#-2-método-1-atualização-via-http-auto-deploy-remoto)
-3. [Método 2: Atualização via Webhook do GitHub](#-3-método-2-atualização-via-webhook-do-github)
-4. [Método 3: Atualização Manual via Git (SSH no Servidor)](#-4-método-3-atualização-manual-via-git-ssh-no-servidor)
-5. [Quando Precisa e Quando NÃO Precisa Reiniciar o Docker?](#-5-quando-precisa-e-quando-não-precisa-reiniciar-o-docker)
-6. [Como Reiniciar o Container Docker](#-6-como-reiniciar-o-container-docker)
-7. [Diagnóstico de Falhas & Solução de Problemas (Troubleshooting)](#-7-diagnóstico-de-falhas--solução-de-problemas-troubleshooting)
+2. [Método 1: Auto-Deploy Remoto via API (Zero Terminal)](#-2-método-1-auto-deploy-remoto-via-api-zero-terminal)
+3. [Método 2: GitHub Webhook (CI/CD Automático)](#-3-método-2-github-webhook-cicd-automático)
+4. [Método 3: Atualização Manual via SSH / Git](#-4-método-3-atualização-manual-via-ssh--git)
+5. [Resolução de Problemas Comuns (Dubious Ownership / Merge Conflito)](#-5-resolução-de-problemas-comuns)
+6. [Regras de Reinício do Docker](#-6-regras-de-reinício-do-docker)
+7. [Comandos Úteis de Diagnóstico & Health Check](#-7-comandos-úteis-de-diagnóstico--health-check)
 
 ---
 
 ## 🧭 1. Os 3 Métodos de Atualização
 
-| Método | Como Funciona | Quando Usar | Requer SSH? |
-| :--- | :--- | :--- | :---: |
-| **HTTP Deploy** | Dispara uma requisição POST na API do próprio servidor | Atualizações rápidas do dia a dia a partir de qualquer lugar | **Não** |
-| **GitHub Webhook** | O GitHub avisa o servidor automaticamente após um `git push` | Integração contínua (CI/CD) automática | **Não** |
-| **Git via SSH** | Acessa o terminal do servidor e roda `git pull` | Manutenções manuais, ajustes de infraestrutura ou recuperação | **Sim** |
+| Método | Como Funciona | Quem Dispara | Requer SSH? |
+| :--- | :--- | :---: | :---: |
+| **Auto-Deploy via API** *(Recomendado)* | Dispara uma requisição HTTP autenticada na API do Business OS | O Assistente de IA (Antigravity) ou Scripts | **Não** |
+| **GitHub Webhook** | O GitHub notifica o servidor automaticamente após cada `git push` | GitHub Actions / Webhooks | **Não** |
+| **Git Manual via SSH** | Acessa o terminal do servidor e roda `git pull` / `git reset` | Administrador (Manutenção) | **Sim** |
 
 ---
 
-## ⚡ 2. Método 1: Atualização via HTTP (Auto-Deploy Remoto)
+## ⚡ 2. Método 1: Auto-Deploy Remoto via API (Zero Terminal)
 
-O sistema possui um endpoint dedicado que puxa a versão mais recente do Git, ajusta permissões, sincroniza o banco (Prisma) e recarrega a aplicação em tempo de execução sem derrubar a porta.
+O Business OS possui um endpoint interno de deploy que executa de forma segura e atômica:
+1. `git config --global --add safe.directory /app`
+2. `git fetch origin main`
+3. `git reset --hard origin/main`
+4. `git pull origin main`
+5. `npx prisma generate && npx prisma db push`
+6. Recarga da aplicação em tempo de execução via *Hot-Reload*.
 
-### **Endpoint:**
+### **Especificações do Endpoint:**
 - **URL:** `POST https://b-os.malves.dev.br/api/system/deploy`
-- **Chave de Autenticação:** `victoria_master_secret_2026`
+- **Token / Chave Master:** `victoria_master_secret_2026`
+- **Headers Aceitos:**
+  - `x-deploy-key: victoria_master_secret_2026`
+  - `x-api-key: victoria_master_secret_2026`
+  - `Authorization: Bearer victoria_master_secret_2026`
+  - Ou via URL: `?token=victoria_master_secret_2026`
 
-### **Onde enviar a chave:**
-- No Header: `x-deploy-key: victoria_master_secret_2026` (ou `x-api-key`)
-- Na URL: `?token=victoria_master_secret_2026`
-- No Header Authorization: `Authorization: Bearer victoria_master_secret_2026`
+### **Exemplos Prontos de Execução:**
 
-### **Payload (JSON):**
+#### A. Via Node.js (Usado pelo Assistente Antigravity):
+```javascript
+fetch('https://b-os.malves.dev.br/api/system/deploy?token=victoria_master_secret_2026', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ branch: 'main' })
+})
+.then(res => res.json())
+.then(console.log);
+```
+
+#### B. Via cURL (Linux / macOS):
+```bash
+curl -X POST "https://b-os.malves.dev.br/api/system/deploy" \
+  -H "Content-Type: application/json" \
+  -H "x-deploy-key: victoria_master_secret_2026" \
+  -d '{"branch":"main"}'
+```
+
+#### C. Via PowerShell (Windows):
+```powershell
+Invoke-RestMethod -Uri "https://b-os.malves.dev.br/api/system/deploy" `
+  -Method Post `
+  -Headers @{ "x-deploy-key" = "victoria_master_secret_2026" } `
+  -ContentType "application/json" `
+  -Body '{"branch":"main"}'
+```
+
+#### Resposta de Sucesso:
 ```json
 {
+  "success": true,
+  "message": "Deploy da branch main finalizado com sucesso!",
   "branch": "main",
-  "runPrisma": true,
-  "npmInstall": false
+  "latestCommit": "6b8cf54 fix(deploy): allow multiple valid deploy keys and query token in system deploy auth",
+  "durationMs": 5186
 }
 ```
 
 ---
 
-## 🔗 3. Método 2: Atualização via Webhook do GitHub
+## 🔗 3. Método 2: GitHub Webhook (CI/CD Automático)
 
-Você pode configurar o GitHub para atualizar o servidor automaticamente a cada commit:
+Para que o GitHub atualize o servidor automaticamente a cada commit enviado para a branch `main`:
 
-1. No seu repositório no GitHub, acesse: **Settings** > **Webhooks** > **Add webhook**.
+1. No repositório GitHub (`https://github.com/zMalves/business-os`), acesse: **Settings** > **Webhooks** > **Add webhook**.
 2. **Payload URL:** `https://b-os.malves.dev.br/api/webhook/github`
 3. **Content type:** `application/json`
-4. **Events:** Selecione apenas *"Just the push event"*.
-5. Salve o webhook.
-
-> **Como funciona:** Sempre que um novo commit entrar na branch monitorada (ex: `main`), o GitHub notifica este endpoint e o servidor roda automaticamente o pull e a atualização do Prisma.
+4. **Secret:** Deixe em branco ou configure o mesmo valor da variável `WEBHOOK_SECRET`.
+5. **Events:** Selecione *"Just the push event"*.
+6. Clique em **Add webhook**.
 
 ---
 
-## 🖥️ 4. Método 3: Atualização Manual via Git (SSH no Servidor)
+## 🖥️ 4. Método 3: Atualização Manual via SSH / Git
 
-Quando estiver conectado ao servidor local ou via SSH:
+Se precisar atualizar diretamente pelo terminal do servidor:
 
-### Informações do Servidor:
-- **Host Local:** `192.168.18.82` (Porta SSH: 22)
+### Informações do Ambiente:
+- **IP do Servidor Local:** `192.168.18.82`
 - **Usuário SSH:** `malves`
-- **Diretório do Projeto no Host:** `/mnt/hd2tb/apps/systems/node-apps/business-os`
-- **Nome do Container Docker:** `business-os-app`
-- **Porta:** `4017`
+- **Diretório do Business OS:** `/mnt/hd2tb/apps/systems/node-apps/business-os`
+- **Container Docker:** `business-os-app` (Porta `4017`)
+- **Container Banco:** `business-os-mariadb` (Porta `3317`, Banco `business_os_db`)
 
-### Comandos de Atualização:
+### Comandos de Atualização Recomendados:
 ```bash
-# 1. Acesse a pasta do projeto
+# 1. Acesse o diretório
 cd /mnt/hd2tb/apps/systems/node-apps/business-os
 
-# 2. Atualize o código do repositório
-git pull origin main
+# 2. Busque os commits mais recentes e alinhe com o GitHub
+git fetch origin main && git reset --hard origin/main
 
-# 3. Garanta permissões de execução e leitura
-chmod -R 777 .
+# 3. Garanta permissões de leitura e escrita
+sudo chmod -R 777 .
 ```
 
 ---
 
-## ❓ 5. Quando Precisa e Quando NÃO Precisa Reiniciar o Docker?
+## 🛠️ 5. Resolução de Problemas Comuns
 
-Como o container roda internamente com **`tsx watch src/server.ts`** (monitoramento em tempo real), na grande maioria das vezes **não é necessário reiniciar o Docker**.
-
-### 🟢 NÃO Precisa Reiniciar o Container (Hot-Reload Automático):
-- Alterações em arquivos TypeScript/JavaScript (`src/services/`, `src/routes/`, `src/agents/`, etc.).
-- Modificações em prompts da IA, regras de negócio ou comandos da Victoria.
-- Alterações em páginas HTML/CSS/JS estáticas da pasta `public/`.
-- Deploys executados via `POST /api/system/deploy`.
-
----
-
-### 🔴 QUANDO É OBRIGATÓRIO Reiniciar o Container Docker:
-Você **deve reiniciar** o container nos seguintes 4 cenários:
-
-1. **Novas bibliotecas npm adicionadas:**
-   Se uma nova biblioteca foi adicionada ao `package.json`, o Node precisa carregar o novo pacote.
-   ```bash
-   sudo docker restart business-os-app
-   ```
-2. **Alteração de variáveis de ambiente (`.env`):**
-   Novas chaves de API, senhas, portas ou URLs alteradas no `.env` só são lidas no início do processo do container.
-3. **Erro 502 Bad Gateway / Processo Travado:**
-   Se o container sofreu crash de memória ou exceção não capturada.
-4. **Alterações estruturais de infraestrutura:**
-   Modificações no `Dockerfile` ou no `docker-compose.yml`.
-
----
-
-## 🔄 6. Como Reiniciar o Container Docker
-
-### Pelo Terminal / Linha de Comando (SSH)
-```bash
-# Reinício rápido do container principal
-sudo docker restart business-os-app
-
-# Se estiver na pasta do projeto:
-cd /mnt/hd2tb/apps/systems/node-apps/business-os
-sudo docker compose restart business-os-app
-```
-
----
-
-### Como Acompanhar os Logs em Tempo Real:
-Para ver se o container subiu corretamente, conectou ao banco e registrou os webhooks:
-
-```bash
-sudo docker logs -f --tail 50 business-os-app
-```
-
-*(Pressione `Ctrl + C` para sair da visualização de logs).*
-
----
-
-## 🩺 7. Diagnóstico de Falhas & Solução de Problemas (Troubleshooting)
-
-### Problema: Cloudflare exibindo "502 Bad Gateway"
-- **Causa:** O container `business-os-app` parou de escutar na porta `4017`.
+### 1. `fatal: detected dubious ownership in repository`
+- **Causa:** Arquivos criados ou modificados dentro do container Docker pertencem ao usuário `root`.
 - **Solução:**
-  1. Veja o log do erro: `sudo docker logs --tail 30 business-os-app`
-  2. Verifique se há algum conflito de git:
-     ```bash
-     cd /mnt/hd2tb/apps/systems/node-apps/business-os
-     git status
-     git pull origin main
-     ```
-  3. Reinicie o container: `sudo docker restart business-os-app`
+```bash
+git config --global --add safe.directory /mnt/hd2tb/apps/systems/node-apps/business-os
+sudo chmod -R 777 /mnt/hd2tb/apps/systems/node-apps/business-os
+```
+
+### 2. `error: Your local changes would be overwritten by merge`
+- **Causa:** Arquivos de lock, permissões ou schemas foram tocados pelo container.
+- **Solução (Alinhamento Limpo):**
+```bash
+git fetch origin main
+git reset --hard origin/main
+```
+*(Seu arquivo `.env` não é apagado pois está protegido no `.gitignore`).*
 
 ---
 
-### Como Testar se a Aplicação Está Viva:
-Abra no terminal:
+## 🔄 6. Regras de Reinício do Docker
+
+Como a aplicação roda em modo `tsx watch` (Hot-Reloading), **95% das alterações não exigem reiniciar o container**.
+
+### 🟢 NÃO Precisa Reiniciar:
+- Alterações em TypeScript/JavaScript (`src/`).
+- Atualizações em arquivos estáticos e telas (`public/`).
+- Novos prompts, skills ou fluxos da Victoria.
+- Deploys executados via API (`/api/system/deploy`).
+
+### 🔴 QUANDO Reiniciar (`sudo docker restart business-os-app`):
+1. **Alteração no `.env`**: Novas variáveis ou chaves de API.
+2. **Novas bibliotecas npm**: Se o `package.json` ganhou pacotes novos.
+3. **Mudanças de Infraestrutura**: Alterações no `docker-compose.yml` ou `Dockerfile`.
+
+---
+
+## 🩺 7. Comandos Úteis de Diagnóstico & Health Check
+
+### Testar Saúde da Aplicação:
 ```bash
 curl http://localhost:4017/api/health
 ```
 
-A resposta deve conter:
-```json
-{
-  "status": "ok",
-  "service": "business-os",
-  "database": "connected",
-  "branch": "main",
-  "commit": "..."
-}
+### Acompanhar Logs em Tempo Real:
+```bash
+sudo docker logs -f --tail 50 business-os-app
+```
+*(Pressione `Ctrl + C` para sair dos logs).*
+
+### Reiniciar Serviços:
+```bash
+sudo docker restart business-os-app
 ```
