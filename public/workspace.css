@@ -332,6 +332,10 @@ html, body {
 }
 
 .topbar-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   min-width: 36px;
@@ -349,6 +353,24 @@ html, body {
   border-color: var(--color-cyprus);
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(0, 70, 67, 0.20);
+}
+
+.topbar-icon-btn .status-indicator-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  border: 1.5px solid #FFFFFF;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.topbar-icon-btn.connected .status-indicator-dot {
+  background: var(--color-mint);
+  box-shadow: 0 0 6px rgba(46, 196, 182, 0.8);
 }
 
 /* ============================================================================
