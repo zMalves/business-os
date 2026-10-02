@@ -2345,10 +2345,28 @@ window.loadAllClientInsightsData = async function() {
   }
 
   try {
+    async function safeFetchJson(url) {
+      try {
+        const res = await fetch(url);
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          const data = await res.json();
+          if (!res.ok && !data.error) data.error = `Erro ${res.status}: ${res.statusText}`;
+          return data;
+        }
+        if (res.status === 401 || res.status === 403) {
+          return { success: false, error: 'Sessão expirada. Faça login novamente no painel.' };
+        }
+        return { success: false, error: `Erro HTTP ${res.status} na requisição.` };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
     const [overviewRes, campaignsRes, creativesRes] = await Promise.all([
-      fetch(`/api/meta/clients/${activeInsightsClientId}/insights?datePreset=${activeInsightsPeriod}`).then(r => r.json()).catch(e => ({ success: false, error: e.message })),
-      fetch(`/api/meta/clients/${activeInsightsClientId}/campaign-insights?datePreset=${activeInsightsPeriod}`).then(r => r.json()).catch(e => ({ success: false, error: e.message })),
-      fetch(`/api/meta/clients/${activeInsightsClientId}/creative-insights?datePreset=${activeInsightsPeriod}`).then(r => r.json()).catch(e => ({ success: false, error: e.message })),
+      safeFetchJson(`/api/meta/clients/${activeInsightsClientId}/insights?datePreset=${activeInsightsPeriod}`),
+      safeFetchJson(`/api/meta/clients/${activeInsightsClientId}/campaign-insights?datePreset=${activeInsightsPeriod}`),
+      safeFetchJson(`/api/meta/clients/${activeInsightsClientId}/creative-insights?datePreset=${activeInsightsPeriod}`),
     ]);
 
     cachedCampaignsData = campaignsRes;
@@ -2400,9 +2418,14 @@ window.loadAllClientInsightsData = async function() {
           </div>
         `;
       } else {
+        const errMsg = overviewRes.error || '';
+        const isTokenErr = /token|session|validating|oauth|auth|expired/i.test(errMsg);
         cardsContainer.innerHTML = `
-          <div style="grid-column: 1 / -1; padding: 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); color: #EF4444; font-size: 0.88rem; text-align: center;">
-            <i class="fa-solid fa-triangle-exclamation"></i> ${overviewRes.error || 'Não foi possível carregar o resumo de métricas.'}
+          <div style="grid-column: 1 / -1; padding: 14px 18px; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.08); color: #DC2626; font-size: 0.86rem; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2);">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i>
+            ${isTokenErr 
+              ? 'O token do perfil da Meta expirou devido à redefinição de segurança. Vá até a aba <strong>Meta Business</strong> e clique em <strong>Conectar Perfil Meta</strong> para renovar.' 
+              : (errMsg || 'Não foi possível carregar o resumo de métricas.')}
           </div>
         `;
       }

@@ -285,6 +285,13 @@ async function main() {
     return reply.status(404).send('Not Found');
   });
 
+  app.setNotFoundHandler((req, reply) => {
+    if (req.url.startsWith('/api')) {
+      return reply.status(404).send({ success: false, error: `Endpoint não encontrado: ${req.url}` });
+    }
+    return reply.status(404).send('Not Found');
+  });
+
   const port = Number(process.env.PORT) || 4017;
   const host = process.env.HOST || '0.0.0.0';
 
