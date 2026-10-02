@@ -7,7 +7,11 @@ export async function skillRoutes(app: FastifyInstance) {
    */
   app.get('/skills', async (req, reply) => {
     try {
-      const skills = await skillService.listAllSkills();
+      let skills = await skillService.listAllSkills();
+      if (skills.length === 0) {
+        await skillService.seedDefaultSkills();
+        skills = await skillService.listAllSkills();
+      }
       return reply.send({ success: true, count: skills.length, skills });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });

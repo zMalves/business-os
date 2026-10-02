@@ -289,6 +289,185 @@ export class SkillService {
       where: { id },
     });
   }
+
+  /**
+   * Inicializa skills operacionais padrão caso o catálogo esteja vazio
+   */
+  async seedDefaultSkills() {
+    try {
+      const count = await prisma.dynamicSkill.count();
+      if (count > 0) return;
+
+      const defaultSkills: DynamicSkillInput[] = [
+        {
+          name: 'resumo_operacional_lojas',
+          displayName: 'Resumo de Vendas (KlimaParts & ArmorCar)',
+          description: 'Consulta o faturamento, ticket médio e pedidos consolidados do Mercado Livre e ERP das lojas.',
+          triggerExamples: ['resumo das lojas', 'como estao as vendas hoje', 'faturamento klimaparts e armorcar'],
+          parametersSchema: {
+            type: 'object',
+            properties: {
+              days: { type: 'number', description: 'Janela em dias (1 para hoje, 7, 30)' },
+            },
+          },
+          workflow: [
+            {
+              id: 'passo_lojas',
+              type: 'tool_call',
+              title: 'Consultar Faturamento Consolidado',
+              toolName: 'klimaparts_store_overview',
+              args: { days: 1 },
+              outputKey: 'lojas',
+            },
+            {
+              id: 'passo_formata',
+              type: 'format_template',
+              title: 'Formatar Relatório',
+              template: '{{steps.lojas}}',
+              outputKey: 'resultado',
+            },
+          ],
+          isActive: true,
+          isDraft: false,
+        },
+        {
+          name: 'auditoria_meta_ads',
+          displayName: 'Auditoria de Performance Meta Ads',
+          description: 'Audita métricas de tráfego, CPL, ROAS, investimento diário e alertas de campanhas ativas.',
+          triggerExamples: ['auditar meta ads', 'relatorio de trafego', 'como estao os anuncios'],
+          parametersSchema: {
+            type: 'object',
+            properties: {
+              datePreset: { type: 'string', description: 'today, yesterday, last_7d, last_30d' },
+            },
+          },
+          workflow: [
+            {
+              id: 'passo_meta',
+              type: 'tool_call',
+              title: 'Consultar Métricas Meta Ads',
+              toolName: 'meta_get_ads_performance',
+              args: { datePreset: 'today' },
+              outputKey: 'performance',
+            },
+            {
+              id: 'passo_formata',
+              type: 'format_template',
+              title: 'Formatar Relatório',
+              template: '{{steps.performance}}',
+              outputKey: 'resultado',
+            },
+          ],
+          isActive: true,
+          isDraft: false,
+        },
+        {
+          name: 'briefing_tarefas_agenda',
+          displayName: 'Briefing Executivo & Agenda do Dia',
+          description: 'Varre o Google Tasks e Google Calendar para listar compromissos e tarefas prioritárias.',
+          triggerExamples: ['briefing do dia', 'o que tenho pra hoje', 'agenda e tarefas'],
+          parametersSchema: {
+            type: 'object',
+            properties: {},
+          },
+          workflow: [
+            {
+              id: 'passo_tarefas',
+              type: 'tool_call',
+              title: 'Buscar Google Tasks',
+              toolName: 'google_tasks_list',
+              args: { showCompleted: false },
+              outputKey: 'tarefas',
+            },
+            {
+              id: 'passo_agenda',
+              type: 'tool_call',
+              title: 'Buscar Google Calendar',
+              toolName: 'google_calendar_list_events',
+              args: { maxResults: 10 },
+              outputKey: 'agenda',
+            },
+            {
+              id: 'passo_formata',
+              type: 'format_template',
+              title: 'Consolidar Briefing',
+              template: '📋 *BRIEFING EXECUTIVO*:\n\n📅 *Agenda*:\n{{steps.agenda}}\n\n✅ *Tarefas Prioritárias*:\n{{steps.tarefas}}',
+              outputKey: 'resultado',
+            },
+          ],
+          isActive: true,
+          isDraft: false,
+        },
+        {
+          name: 'triagem_expedicao_pedidos',
+          displayName: 'Triagem & Fila de Expedição E-commerce',
+          description: 'Lista todos os pedidos que precisam ser despachados no dia para garantir SLA de envio.',
+          triggerExamples: ['pedidos para despachar', 'envios pendentes', 'fila de expedicao'],
+          parametersSchema: {
+            type: 'object',
+            properties: {
+              days: { type: 'number', description: 'Janela em dias' },
+            },
+          },
+          workflow: [
+            {
+              id: 'passo_envios',
+              type: 'tool_call',
+              title: 'Listar Pedidos Pendentes',
+              toolName: 'klimaparts_list_pending_orders',
+              args: { days: 1 },
+              outputKey: 'envios',
+            },
+            {
+              id: 'passo_formata',
+              type: 'format_template',
+              title: 'Formatar Lista de Despacho',
+              template: '{{steps.envios}}',
+              outputKey: 'resultado',
+            },
+          ],
+          isActive: true,
+          isDraft: false,
+        },
+        {
+          name: 'limpeza_duplicadas_google_tasks',
+          displayName: 'Organização & Deduplicação Google Tasks',
+          description: 'Analisa todas as tarefas da conta Google e remove títulos repetidos mantendo a lista limpa.',
+          triggerExamples: ['limpar tarefas duplicadas', 'organizar tarefas', 'deduplicar tarefas'],
+          parametersSchema: {
+            type: 'object',
+            properties: {},
+          },
+          workflow: [
+            {
+              id: 'passo_limpeza',
+              type: 'tool_call',
+              title: 'Deduplicar Tarefas',
+              toolName: 'google_tasks_clean_duplicates',
+              args: {},
+              outputKey: 'limpeza',
+            },
+            {
+              id: 'passo_formata',
+              type: 'format_template',
+              title: 'Resultado da Limpeza',
+              template: '{{steps.limpeza}}',
+              outputKey: 'resultado',
+            },
+          ],
+          isActive: true,
+          isDraft: false,
+        },
+      ];
+
+      for (const skill of defaultSkills) {
+        await this.saveSkill(skill);
+      }
+      loggerService.system(`✨ [SkillService] ${defaultSkills.length} Dynamic Skills padrão semeadas no catálogo com sucesso.`);
+    } catch (err: any) {
+      loggerService.system(`⚠️ Falha ao semear skills padrão: ${err.message}`, null, 'warn');
+    }
+  }
 }
 
 export const skillService = new SkillService();

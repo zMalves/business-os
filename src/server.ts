@@ -310,8 +310,10 @@ async function main() {
     setTimeout(async () => {
       try {
         await cronService.init();
+        const { skillService } = await import('./services/skill.service.js');
+        await skillService.seedDefaultSkills();
       } catch (e: any) {
-        loggerService.error('system', `Erro ao iniciar cronService: ${e.message}`);
+        loggerService.error('system', `Erro ao iniciar serviços (cron/skills): ${e.message}`);
       }
     }, 1000);
 
