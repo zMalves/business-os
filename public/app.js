@@ -213,7 +213,7 @@ window.switchTab = switchTab;
 // Chat Functionality
 function setupChat() {
   const btnNewChat = document.getElementById('btn-new-chat');
-  if (btnNewChat) {
+  if (btnNewChat && chatMessages) {
     btnNewChat.addEventListener('click', () => {
       activeConversationId = null;
       localStorage.removeItem('active_conversation_id');
@@ -226,7 +226,7 @@ function setupChat() {
               <small>Agora</small>
             </div>
             <div class="bubble-content">
-              <p>Olá! Sou a <strong>Victoria</strong>, sua Copiloto Executiva e Chief of Staff do <strong>Business OS</strong>.</p>
+              <p>Olá! Sou a <strong>Victoria</strong>, sua Assistente Executiva do <strong>Business OS</strong>.</p>
               <p>Como posso ajudar com a visão geral do seu negócio, operações, tráfego ou tomada de decisão estratégica hoje?</p>
             </div>
           </div>
@@ -235,59 +235,65 @@ function setupChat() {
     });
   }
 
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      chatForm.dispatchEvent(new Event('submit'));
-    }
-  });
-
-  chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    appendUserMessage(text);
-    chatInput.value = '';
-    chatInput.style.height = 'auto';
-
-    const loadingId = appendLoadingMessage();
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId: activeConversationId || undefined,
-          message: text,
-          channel: 'web'
-        })
-      });
-
-      const data = await res.json();
-      removeLoadingMessage(loadingId);
-
-      if (data.success) {
-        if (data.conversationId) {
-          activeConversationId = data.conversationId;
-          localStorage.setItem('active_conversation_id', activeConversationId);
-        }
-        appendAssistantMessage(data.response, data.toolCalls);
-        fetchTasks(); // Atualiza a lista caso tenha criado tarefa
-        fetchMemories(); // Atualiza a lista caso tenha criado memória
-      } else {
-        appendAssistantMessage(`❌ Erro: ${data.message || 'Falha ao processar mensagem.'}`);
+  if (chatInput && chatForm) {
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event('submit'));
       }
-    } catch (err) {
-      removeLoadingMessage(loadingId);
-      appendAssistantMessage(`⚠️ Falha de comunicação com o servidor: ${err.message}`);
-    }
-  });
+    });
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      appendUserMessage(text);
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+
+      const loadingId = appendLoadingMessage();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: activeConversationId || undefined,
+            message: text,
+            channel: 'web'
+          })
+        });
+
+        const data = await res.json();
+        removeLoadingMessage(loadingId);
+
+        if (data.success) {
+          if (data.conversationId) {
+            activeConversationId = data.conversationId;
+            localStorage.setItem('active_conversation_id', activeConversationId);
+          }
+          appendAssistantMessage(data.response, data.toolCalls);
+          fetchTasks(); // Atualiza a lista caso tenha criado tarefa
+          fetchMemories(); // Atualiza a lista caso tenha criado memória
+        } else {
+          appendAssistantMessage(`❌ Erro: ${data.message || 'Falha ao processar mensagem.'}`);
+        }
+      } catch (err) {
+        removeLoadingMessage(loadingId);
+        appendAssistantMessage(`⚠️ Falha de comunicação com o servidor: ${err.message}`);
+      }
+    });
+  }
 }
 
 function sendQuickPrompt(promptText) {
-  chatInput.value = promptText;
-  chatForm.dispatchEvent(new Event('submit'));
+  if (chatInput && chatForm) {
+    chatInput.value = promptText;
+    chatForm.dispatchEvent(new Event('submit'));
+  } else {
+    sendCopilotPrompt(promptText);
+  }
 }
 
 function appendUserMessage(text) {
