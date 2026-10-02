@@ -158,7 +158,7 @@ async function main() {
     '/api/auth/logout',
     '/api/auth/me',
     '/api/health',
-    '/api/system/deploy',
+    '/api/system',
     '/api/whatsapp/webhook',
     '/api/webhook',
     '/api/auth/google/callback',
