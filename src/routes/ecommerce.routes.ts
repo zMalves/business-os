@@ -9,8 +9,36 @@ export async function ecommerceRoutes(app: FastifyInstance) {
     try {
       const query = req.query as any;
       const days = parseInt(query?.days || '1', 10);
-      const data = await klimaPartsService.getConsolidatedReport(days);
-      return reply.send({ success: true, days, data });
+      const [klima, armor] = await Promise.all([
+        klimaPartsService.getStoreOverview(1, days),
+        klimaPartsService.getStoreOverview(2, days),
+      ]);
+
+      const kRev = klima.metrics?.total_revenue || 0;
+      const kOrd = klima.metrics?.total_orders || 0;
+      const aRev = armor.metrics?.total_revenue || 0;
+      const aOrd = armor.metrics?.total_orders || 0;
+
+      return reply.send({
+        success: true,
+        days,
+        data: {
+          total_amount: kRev + aRev,
+          total_orders: kOrd + aOrd,
+          klimaparts: {
+            total_amount: kRev,
+            total_orders: kOrd,
+            metrics: klima.metrics || {},
+            topSkus: klima.top_selling_skus || [],
+          },
+          armorcar: {
+            total_amount: aRev,
+            total_orders: aOrd,
+            metrics: armor.metrics || {},
+            topSkus: armor.top_selling_skus || [],
+          },
+        },
+      });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
     }
@@ -38,7 +66,7 @@ export async function ecommerceRoutes(app: FastifyInstance) {
     try {
       const query = req.query as any;
       const days = parseInt(query?.days || '1', 10);
-      const data = await klimaPartsService.getPendingOrders(days);
+      const data = await klimaPartsService.listPendingOrders(undefined, days);
       return reply.send({ success: true, days, data });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
@@ -50,8 +78,15 @@ export async function ecommerceRoutes(app: FastifyInstance) {
    */
   app.get('/ecommerce/questions/pending', async (req, reply) => {
     try {
-      const data = await klimaPartsService.getQuestions();
-      return reply.send({ success: true, data });
+      const [klimaQ, armorQ] = await Promise.all([
+        klimaPartsService.getUnansweredQuestions(1),
+        klimaPartsService.getUnansweredQuestions(2),
+      ]);
+      const questions = [
+        ...(Array.isArray(klimaQ?.questions) ? klimaQ.questions.map((q: any) => ({ ...q, store: 'KlimaParts' })) : []),
+        ...(Array.isArray(armorQ?.questions) ? armorQ.questions.map((q: any) => ({ ...q, store: 'ArmorCar' })) : []),
+      ];
+      return reply.send({ success: true, data: { total: questions.length, questions } });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
     }

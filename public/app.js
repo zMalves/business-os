@@ -2778,11 +2778,56 @@ async function fetchDashboardOverview() {
       })
       .catch(() => {});
 
+    // G. Google Calendar Agenda
+    fetchGoogleEvents();
+
   } catch (err) {
     console.warn('[Dashboard] Erro ao carregar overview:', err);
   }
 }
 window.fetchDashboardOverview = fetchDashboardOverview;
+
+// Google Calendar Agenda Loader
+async function fetchGoogleEvents() {
+  const container = document.getElementById('dash-upcoming-events');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/google/calendar/events?limit=5');
+    const data = await res.json();
+
+    if (data.success && Array.isArray(data.events) && data.events.length > 0) {
+      container.innerHTML = data.events.map(ev => {
+        const timeStr = ev.start?.dateTime 
+          ? new Date(ev.start.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) 
+          : (ev.start?.date || 'Dia todo');
+        return `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-sand-light); border-radius: var(--radius-sm); border: 1px solid var(--color-sand-border);">
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 210px;">
+              <strong style="font-size: 0.84rem; color: var(--color-ink); display: block; overflow: hidden; text-overflow: ellipsis;">${ev.summary || 'Compromisso'}</strong>
+              <div style="font-size: 0.74rem; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis;">${ev.location || 'Google Calendar'}</div>
+            </div>
+            <span class="badge badge-info" style="font-size: 0.72rem; flex-shrink: 0;"><i class="fa-regular fa-clock"></i> ${timeStr}</span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = `
+        <div style="color: var(--color-muted); font-size: 0.84rem; padding: 14px; text-align: center;">
+          <i class="fa-regular fa-calendar-check" style="color: var(--color-mint); margin-bottom: 4px; display: block; font-size: 1.2rem;"></i>
+          Nenhum compromisso pendente na agenda hoje.
+        </div>
+      `;
+    }
+  } catch (err) {
+    container.innerHTML = `
+      <div style="color: var(--color-muted); font-size: 0.82rem; padding: 10px; text-align: center;">
+        Google Calendar não conectado ou indisponível.
+      </div>
+    `;
+  }
+}
+window.fetchGoogleEvents = fetchGoogleEvents;
 
 // 2. E-Commerce Operations Loader
 async function setEcommercePeriod(days) {

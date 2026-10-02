@@ -6,9 +6,9 @@ const chatService = new ChatService();
 
 const chatMessageSchema = z.object({
   message: z.string().min(1, 'A mensagem não pode estar vazia'),
-  conversationId: z.string().optional(),
-  externalId: z.string().optional(),
-  channel: z.string().optional().default('web'),
+  conversationId: z.string().nullable().optional(),
+  externalId: z.string().nullable().optional(),
+  channel: z.string().nullable().optional().default('web'),
 });
 
 export async function chatRoutes(app: FastifyInstance) {
@@ -20,7 +20,12 @@ export async function chatRoutes(app: FastifyInstance) {
     }
 
     try {
-      const result = await chatService.processIncomingMessage(parsed.data);
+      const result = await chatService.processIncomingMessage({
+        message: parsed.data.message,
+        conversationId: parsed.data.conversationId || undefined,
+        externalId: parsed.data.externalId || undefined,
+        channel: parsed.data.channel || 'web',
+      });
       return reply.send({
         success: true,
         conversationId: result.conversationId,

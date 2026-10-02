@@ -105,7 +105,16 @@ export async function healthRoutes(app: FastifyInstance) {
   app.get('/ai/usage-stats', async (_req, reply) => {
     try {
       const stats = await usageService.getStats();
-      return reply.send({ success: true, data: stats });
+      return reply.send({ success: true, data: stats, stats });
+    } catch (error: any) {
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+  });
+
+  app.get('/usage/stats', async (_req, reply) => {
+    try {
+      const stats = await usageService.getStats();
+      return reply.send({ success: true, stats, data: stats });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
     }
