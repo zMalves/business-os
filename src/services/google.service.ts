@@ -51,10 +51,18 @@ export class GoogleService {
   private async createOAuth2Client(redirectUri?: string) {
     const google = await getGoogle();
     if (!google) return null;
+    const clientId = (process.env.GOOGLE_CLIENT_ID || this.clientId || '').replace(/^["']|["']$/g, '').trim();
+    const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || this.clientSecret || '').replace(/^["']|["']$/g, '').trim();
+    const defaultUri = (process.env.GOOGLE_REDIRECT_URI || this.defaultRedirectUri || 'https://b-os.malves.dev.br/api/auth/google/callback').replace(/^["']|["']$/g, '').trim();
+
+    if (!clientId) {
+      throw new Error('GOOGLE_CLIENT_ID não encontrado no ambiente do servidor.');
+    }
+
     return new google.auth.OAuth2(
-      this.clientId,
-      this.clientSecret,
-      redirectUri || this.defaultRedirectUri
+      clientId,
+      clientSecret,
+      redirectUri || defaultUri
     );
   }
 

@@ -6,6 +6,8 @@ services:
     container_name: ${CONTAINER_NAME:-business-os-app}
     restart: unless-stopped
     user: "0:0" # Roda com permissão de root (777)
+    env_file:
+      - .env
     ports:
       - "${PORT:-4017}:${PORT:-4017}"
     volumes:
