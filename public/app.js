@@ -451,71 +451,102 @@ function renderTasks() {
 
   if (filtered.length === 0) {
     tasksGrid.innerHTML = `
-      <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-dim);">
-        <i class="fa-solid fa-calendar-xmark" style="font-size: 2rem; margin-bottom: 12px;"></i>
-        <p>Nenhuma tarefa encontrada neste filtro.</p>
+      <div style="grid-column: 1/-1; text-align: center; padding: 48px 24px; color: var(--text-dim); background: #FFFFFF; border-radius: var(--radius-sm); border: 1px dashed var(--color-sand-border);">
+        <i class="fa-solid fa-clipboard-check" style="font-size: 2.2rem; margin-bottom: 12px; color: var(--color-mint); opacity: 0.6;"></i>
+        <p style="font-size: 0.95rem; font-weight: 600; color: var(--color-cyprus); margin-bottom: 4px;">Nenhuma tarefa encontrada neste filtro</p>
+        <small style="color: var(--color-muted);">Suas pendências do Google Tasks aparecerão listadas aqui.</small>
       </div>
     `;
     return;
   }
 
-  tasksGrid.innerHTML = filtered.map(task => {
-    const dateStr = task.dueDate 
-      ? new Date(task.dueDate).toLocaleString('pt-BR', {
-          timeZone: 'America/Sao_Paulo',
-          dateStyle: 'short',
-          timeStyle: 'short',
-        })
-      : 'Sem data limite';
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-    const isCompleted = task.status === 'COMPLETED';
+  tasksGrid.innerHTML = `
+    <div class="tasks-list-container">
+      ${filtered.map(task => {
+        let dateStr = 'Sem prazo';
+        let isOverdue = false;
+        let isToday = false;
 
-    return `
-      <div class="task-card" style="${isCompleted ? 'opacity: 0.6;' : ''}">
-        <div class="task-card-header">
-          <h4 class="task-title" style="${isCompleted ? 'text-decoration: line-through;' : ''}">${escapeHtml(task.title)}</h4>
-          <span class="priority-badge priority-${task.priority || 'MEDIUM'}">${task.priority || 'NORMAL'}</span>
-        </div>
-        ${task.description ? `<p class="task-desc">${escapeHtml(task.description)}</p>` : ''}
-        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
-          <span style="font-size: 0.72rem; background: rgba(46, 196, 182, 0.12); color: var(--accent-mint); padding: 2px 8px; border-radius: 999px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
-            <i class="fa-brands fa-google"></i> Google Tasks
-          </span>
-          ${task.category && task.category !== 'Google Tasks' ? `<small style="color: #818CF8;"><i class="fa-solid fa-tag"></i> ${escapeHtml(task.category)}</small>` : ''}
-        </div>
-        <div class="task-card-footer">
-          <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
-          <div class="task-actions">
-            ${!isCompleted ? `
-              <button class="btn-icon check" title="Concluir Tarefa no Google Tasks" onclick="completeTask('${task.id}')">
-                <i class="fa-solid fa-circle-check"></i>
-              </button>
-            ` : ''}
-            <button class="btn-icon trash" title="Excluir do Google Tasks" onclick="deleteTask('${task.id}')">
-              <i class="fa-solid fa-trash"></i>
+        if (task.dueDate) {
+          const d = new Date(task.dueDate);
+          const taskDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          
+          if (taskDateStr === todayStr) {
+            isToday = true;
+            dateStr = 'Hoje ' + d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+          } else {
+            if (d < now && task.status !== 'COMPLETED') {
+              isOverdue = true;
+            }
+            dateStr = d.toLocaleDateString('pt-BR', {
+              timeZone: 'America/Sao_Paulo',
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+          }
+        }
+
+        const isCompleted = task.status === 'COMPLETED';
+
+        return `
+          <div class="task-list-row ${isCompleted ? 'completed' : ''}">
+            <button class="task-check-btn ${isCompleted ? 'checked' : ''}" onclick="toggleTaskStatus('${task.id}', '${task.status}')" title="${isCompleted ? 'Reabrir tarefa no Google Tasks' : 'Concluir tarefa no Google Tasks'}">
+              <i class="${isCompleted ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}"></i>
             </button>
+
+            <div class="task-list-body">
+              <div class="task-list-title-row">
+                <span class="task-list-title ${isCompleted ? 'completed' : ''}">${escapeHtml(task.title)}</span>
+                <span class="priority-badge priority-${task.priority || 'MEDIUM'}">${task.priority || 'NORMAL'}</span>
+              </div>
+              ${task.description ? `<p class="task-list-notes">${escapeHtml(task.description)}</p>` : ''}
+              <div class="task-list-meta">
+                <span class="task-badge-google">
+                  <i class="fa-brands fa-google"></i> Google Tasks
+                </span>
+                <span class="task-due-badge ${isOverdue ? 'overdue' : ''} ${isToday ? 'today' : ''}">
+                  <i class="fa-regular fa-calendar"></i> ${escapeHtml(dateStr)}
+                </span>
+                ${task.category && task.category !== 'Google Tasks' ? `<span class="category-badge">${escapeHtml(task.category)}</span>` : ''}
+              </div>
+            </div>
+
+            <div class="task-list-actions">
+              <button class="btn-action-icon danger" title="Excluir do Google Tasks" onclick="deleteTask('${task.id}')">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
-    `;
-  }).join('');
+        `;
+      }).join('')}
+    </div>
+  `;
 }
 
-async function completeTask(id) {
+async function toggleTaskStatus(id, currentStatus) {
+  const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
   try {
     await fetch(`/api/tasks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'COMPLETED' })
+      body: JSON.stringify({ status: newStatus })
     });
     fetchTasks();
   } catch (err) {
-    alert('Erro ao concluir tarefa');
+    alert('Erro ao atualizar status da tarefa');
   }
 }
 
+async function completeTask(id) {
+  return toggleTaskStatus(id, 'PENDING');
+}
+
 async function deleteTask(id) {
-  if (!confirm('Deseja realmente excluir esta tarefa?')) return;
+  if (!confirm('Deseja realmente excluir esta tarefa do Google Tasks?')) return;
   try {
     await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
     fetchTasks();

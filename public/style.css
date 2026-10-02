@@ -1249,10 +1249,151 @@ body.hide-tool-badges .tool-call-badge {
   box-shadow: 0 2px 6px rgba(0, 70, 67, 0.20);
 }
 
-.tasks-grid, .memories-grid {
+.memories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 16px;
+}
+
+/* ============================================================================
+   TASKS LIST VIEW (Google Tasks Clean List Design)
+   ============================================================================ */
+.tasks-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.task-list-row {
+  background: #FFFFFF;
+  border: 1px solid var(--color-sand-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
+}
+
+.task-list-row:hover {
+  border-color: var(--color-cyprus);
+  box-shadow: var(--shadow-sm);
+  background: #FCFBF9;
+}
+
+.task-list-row.completed {
+  opacity: 0.55;
+  background: rgba(240, 237, 229, 0.45);
+}
+
+.task-check-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--color-slate);
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.task-check-btn:hover {
+  color: var(--color-mint);
+  transform: scale(1.15);
+}
+
+.task-check-btn.checked {
+  color: var(--color-mint);
+}
+
+.task-list-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-list-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-list-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  word-break: break-word;
+}
+
+.task-list-title.completed {
+  text-decoration: line-through;
+  color: var(--color-muted);
+}
+
+.task-list-notes {
+  font-size: 0.83rem;
+  color: var(--color-slate);
+  margin: 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.task-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.task-badge-google {
+  font-size: 0.72rem;
+  background: rgba(46, 196, 182, 0.12);
+  color: var(--color-cyprus);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(46, 196, 182, 0.25);
+}
+
+.task-due-badge {
+  font-size: 0.74rem;
+  color: var(--color-slate);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+
+.task-due-badge.overdue {
+  color: var(--color-coral);
+  font-weight: 600;
+}
+
+.task-due-badge.today {
+  color: #B57416;
+  font-weight: 600;
+}
+
+.task-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .task-card, .memory-card {
