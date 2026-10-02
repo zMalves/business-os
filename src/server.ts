@@ -326,6 +326,26 @@ async function main() {
         loggerService.whatsapp(`⚠️ Auto-registro do webhook falhou na inicialização: ${e.message}`, null, 'warn');
       }
     }, 2000);
+
+    // Sincronização periódica do Meta Ads no Banco de Dados a cada 2 minutos
+    setTimeout(async () => {
+      try {
+        const { metaService } = await import('./services/meta.service.js');
+        await metaService.syncAllMetaAdsMetrics('today');
+        loggerService.system('🔄 [Meta Ads] Primeira sincronização no banco de dados concluída.');
+      } catch (e: any) {
+        loggerService.system(`⚠️ Falha na sincronização inicial do Meta Ads: ${e.message}`, null, 'warn');
+      }
+    }, 5000);
+
+    setInterval(async () => {
+      try {
+        const { metaService } = await import('./services/meta.service.js');
+        await metaService.syncAllMetaAdsMetrics('today');
+      } catch (e: any) {
+        loggerService.error('system', `Erro no background sync do Meta Ads: ${e.message}`);
+      }
+    }, 2 * 60 * 1000);
   } catch (err: any) {
     loggerService.error('system', `Falha fatal ao iniciar servidor: ${err.message}`, { error: err });
     app.log.error(err);

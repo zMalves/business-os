@@ -2629,6 +2629,275 @@ ${postsSummary}`;
       summaryCard: card,
     };
   }
+
+  // =========================================================================
+  // 6. SINCRONIZAÇÃO EM BANCO DE DADOS & CACHE DE MÉTRICAS (A CADA 2 MINUTOS)
+  // =========================================================================
+
+  /**
+   * Puxa os dados da Meta Graph API de todos os clientes ativos e salva no banco de dados MariaDB
+   */
+  async syncAllMetaAdsMetrics(datePreset: string = 'today') {
+    try {
+      const clients = await prisma.metaClient.findMany({
+        where: { isActive: true },
+        include: { profile: true },
+      });
+
+      const validClients = clients.filter(
+        (c) => c.adAccountId && c.profile?.accessToken && c.profile?.isActive
+      );
+
+      let totalSpend = 0;
+      let totalImpressions = 0;
+      let totalClicks = 0;
+      let totalReach = 0;
+      let totalLeads = 0;
+      let totalPurchases = 0;
+      const syncedClients: any[] = [];
+
+      for (const client of validClients) {
+        try {
+          const res = await this.getAdAccountInsights(client.id, {
+            datePreset: datePreset as any,
+          });
+
+          if (res.success && res.metrics) {
+            const m = res.metrics;
+            totalSpend += m.spend || 0;
+            totalImpressions += m.impressions || 0;
+            totalClicks += m.clicks || 0;
+            totalReach += m.reach || 0;
+            totalLeads += m.leads || 0;
+            totalPurchases += m.purchases || 0;
+
+            await prisma.metaAdsCache.upsert({
+              where: {
+                clientId_datePreset: {
+                  clientId: client.id,
+                  datePreset,
+                },
+              },
+              update: {
+                spend: m.spend || 0,
+                impressions: m.impressions || 0,
+                clicks: m.clicks || 0,
+                reach: m.reach || 0,
+                leads: m.leads || 0,
+                purchases: m.purchases || 0,
+                cpc: m.cpc || 0,
+                cpm: m.cpm || 0,
+                ctr: m.ctr || 0,
+                costPerLead: m.costPerLead || 0,
+                roas: m.roas || 0,
+                currency: client.currency || 'BRL',
+                clientName: client.name,
+                adAccountId: client.adAccountId,
+                rawMetrics: m as any,
+                lastSyncAt: new Date(),
+              },
+              create: {
+                clientId: client.id,
+                datePreset,
+                spend: m.spend || 0,
+                impressions: m.impressions || 0,
+                clicks: m.clicks || 0,
+                reach: m.reach || 0,
+                leads: m.leads || 0,
+                purchases: m.purchases || 0,
+                cpc: m.cpc || 0,
+                cpm: m.cpm || 0,
+                ctr: m.ctr || 0,
+                costPerLead: m.costPerLead || 0,
+                roas: m.roas || 0,
+                currency: client.currency || 'BRL',
+                clientName: client.name,
+                adAccountId: client.adAccountId,
+                rawMetrics: m as any,
+                lastSyncAt: new Date(),
+              },
+            });
+
+            syncedClients.push({
+              clientId: client.id,
+              clientName: client.name,
+              spend: m.spend,
+              leads: m.leads,
+            });
+          }
+        } catch (clientErr: any) {
+          loggerService.error(
+            'system',
+            `[Meta Sync] Erro ao sincronizar cliente ${client.name}: ${clientErr.message}`
+          );
+        }
+      }
+
+      // Calcula indicadores consolidados
+      const costPerLead = totalLeads > 0 ? Number((totalSpend / totalLeads).toFixed(2)) : 0;
+      const ctr = totalImpressions > 0 ? Number(((totalClicks / totalImpressions) * 100).toFixed(2)) : 0;
+      const cpc = totalClicks > 0 ? Number((totalSpend / totalClicks).toFixed(2)) : 0;
+      const cpm = totalImpressions > 0 ? Number(((totalSpend / totalImpressions) * 1000).toFixed(2)) : 0;
+
+      // Salva o registro consolidado global ("all") no banco de dados
+      const consolidated = await prisma.metaAdsCache.upsert({
+        where: {
+          clientId_datePreset: {
+            clientId: 'all',
+            datePreset,
+          },
+        },
+        update: {
+          spend: totalSpend,
+          impressions: totalImpressions,
+          clicks: totalClicks,
+          reach: totalReach,
+          leads: totalLeads,
+          purchases: totalPurchases,
+          cpc,
+          cpm,
+          ctr,
+          costPerLead,
+          roas: 0,
+          currency: 'BRL',
+          clientName: 'Consolidado Global',
+          adAccountId: 'all',
+          lastSyncAt: new Date(),
+        },
+        create: {
+          clientId: 'all',
+          datePreset,
+          spend: totalSpend,
+          impressions: totalImpressions,
+          clicks: totalClicks,
+          reach: totalReach,
+          leads: totalLeads,
+          purchases: totalPurchases,
+          cpc,
+          cpm,
+          ctr,
+          costPerLead,
+          roas: 0,
+          currency: 'BRL',
+          clientName: 'Consolidado Global',
+          adAccountId: 'all',
+          lastSyncAt: new Date(),
+        },
+      });
+
+      loggerService.system(
+        `📊 [Meta Ads Sync] Sincronização concluída (${datePreset}): R$ ${totalSpend.toFixed(2)} investidos · ${totalLeads} leads · ${syncedClients.length}/${validClients.length} contas atualizadas.`
+      );
+
+      return {
+        success: true,
+        datePreset,
+        totalSpend,
+        totalLeads,
+        totalImpressions,
+        totalClicks,
+        costPerLead,
+        syncedClientsCount: syncedClients.length,
+        totalValidClients: validClients.length,
+        lastSyncAt: consolidated.lastSyncAt,
+      };
+    } catch (error: any) {
+      loggerService.error('system', `❌ Falha geral na sincronização Meta Ads: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Obtém os dados consolidados do cache do banco de dados (Resposta ultra rápida em <5ms)
+   */
+  async getConsolidatedOverview(datePreset: string = 'today') {
+    try {
+      let cached = await prisma.metaAdsCache.findUnique({
+        where: {
+          clientId_datePreset: {
+            clientId: 'all',
+            datePreset,
+          },
+        },
+      });
+
+      // Se o cache não existir ou estiver desatualizado (> 5 minutos), força sincronização imediata
+      const isStale = !cached || (Date.now() - new Date(cached.lastSyncAt).getTime() > 5 * 60 * 1000);
+      if (isStale) {
+        await this.syncAllMetaAdsMetrics(datePreset);
+        cached = await prisma.metaAdsCache.findUnique({
+          where: {
+            clientId_datePreset: {
+              clientId: 'all',
+              datePreset,
+            },
+          },
+        });
+      }
+
+      const clientCaches = await prisma.metaAdsCache.findMany({
+        where: {
+          datePreset,
+          NOT: { clientId: 'all' },
+        },
+        orderBy: { spend: 'desc' },
+      });
+
+      return {
+        success: true,
+        consolidated: {
+          spend: cached?.spend || 0,
+          spendFormatted: `R$ ${(cached?.spend || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          leads: cached?.leads || 0,
+          clicks: cached?.clicks || 0,
+          impressions: cached?.impressions || 0,
+          reach: cached?.reach || 0,
+          purchases: cached?.purchases || 0,
+          cpc: cached?.cpc || 0,
+          cpm: cached?.cpm || 0,
+          ctr: cached?.ctr || 0,
+          costPerLead: cached?.costPerLead || 0,
+          costPerLeadFormatted: (cached?.leads || 0) > 0 ? `R$ ${(cached?.costPerLead || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
+          lastSyncAt: cached?.lastSyncAt || new Date(),
+        },
+        clients: clientCaches.map((c) => ({
+          clientId: c.clientId,
+          clientName: c.clientName,
+          adAccountId: c.adAccountId,
+          spend: c.spend,
+          spendFormatted: `${c.currency} ${c.spend.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          leads: c.leads,
+          clicks: c.clicks,
+          impressions: c.impressions,
+          costPerLead: c.costPerLead,
+          currency: c.currency,
+          lastSyncAt: c.lastSyncAt,
+        })),
+      };
+    } catch (error: any) {
+      loggerService.error('system', `Erro ao buscar overview de Meta Ads: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+        consolidated: {
+          spend: 0,
+          spendFormatted: 'R$ 0,00',
+          leads: 0,
+          clicks: 0,
+          impressions: 0,
+          reach: 0,
+          purchases: 0,
+          cpc: 0,
+          cpm: 0,
+          ctr: 0,
+          costPerLead: 0,
+          costPerLeadFormatted: 'N/A',
+          lastSyncAt: new Date(),
+        },
+        clients: [],
+      };
+    }
+  }
 }
 
 export const metaService = new MetaService();

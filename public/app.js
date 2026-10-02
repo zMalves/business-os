@@ -2725,16 +2725,21 @@ async function fetchDashboardOverview() {
       })
       .catch(() => {});
 
-    // B. Meta Ads Overview
-    fetch('/api/meta/clients')
+    // B. Meta Ads Overview (Cache do Banco de Dados sincronizado a cada 2 min)
+    fetch('/api/meta/overview?datePreset=today')
       .then(r => r.json())
       .then(d => {
-        if (d.success && Array.isArray(d.clients)) {
-          const activeClients = d.clients.filter(c => c.isActive);
+        if (d.success && d.consolidated) {
+          const spend = Number(d.consolidated.spend || 0);
+          const leads = Number(d.consolidated.leads || 0);
           const metaSpendEl = document.getElementById('dash-meta-spend');
           const metaLeadsEl = document.getElementById('dash-meta-leads');
-          if (metaSpendEl) metaSpendEl.textContent = `${activeClients.length} Clientes`;
-          if (metaLeadsEl) metaLeadsEl.innerHTML = `<i class="fa-brands fa-meta"></i> ${d.clients.length} contas configuradas`;
+          if (metaSpendEl) {
+            metaSpendEl.textContent = `R$ ${spend.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          }
+          if (metaLeadsEl) {
+            metaLeadsEl.innerHTML = `<i class="fa-solid fa-users"></i> ${leads} leads hoje`;
+          }
         }
       })
       .catch(() => {});

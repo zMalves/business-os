@@ -245,3 +245,30 @@ model User {
 
   @@map("users")
 }
+
+model MetaAdsCache {
+  id              String    @id @default(cuid())
+  clientId        String?   @db.VarChar(100) // "all" para consolidado global
+  datePreset      String    @default("today") @db.VarChar(50)
+  spend           Float     @default(0)
+  impressions     Int       @default(0)
+  clicks          Int       @default(0)
+  reach           Int       @default(0)
+  leads           Int       @default(0)
+  purchases       Int       @default(0)
+  cpc             Float     @default(0)
+  cpm             Float     @default(0)
+  ctr             Float     @default(0)
+  costPerLead     Float     @default(0)
+  roas            Float     @default(0)
+  currency        String    @default("BRL") @db.VarChar(10)
+  clientName      String?   @db.VarChar(255)
+  adAccountId     String?   @db.VarChar(100)
+  rawMetrics      Json?
+  lastSyncAt      DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([clientId, datePreset])
+  @@index([lastSyncAt])
+  @@map("meta_ads_cache")
+}

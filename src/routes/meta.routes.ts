@@ -582,6 +582,33 @@ export async function metaRoutes(app: FastifyInstance) {
       return reply.status(500).send({ success: false, error: error.message });
     }
   });
+
+  // ==========================================
+  // 6. OVERVIEW CONSOLIDADO & SINCRONIZAÇÃO EM BANCO
+  // ==========================================
+
+  app.get('/meta/overview', async (req, reply) => {
+    try {
+      const query = req.query as any;
+      const datePreset = query?.datePreset || 'today';
+      const result = await metaService.getConsolidatedOverview(datePreset);
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+  });
+
+  app.post('/meta/sync', async (req, reply) => {
+    try {
+      const body = (req.body as any) || {};
+      const datePreset = body.datePreset || 'today';
+      const result = await metaService.syncAllMetaAdsMetrics(datePreset);
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+  });
 }
+
 
 
