@@ -163,10 +163,11 @@ function setupNavigation() {
 function switchTab(tab) {
   let targetScrollSection = null;
   // Aliases for legacy section references
-  if (['ai-hub', 'memories', 'logs', 'system', 'settings'].includes(tab)) {
+  if (['ai-hub', 'memories', 'logs', 'system', 'webhooks', 'settings'].includes(tab)) {
     if (tab === 'ai-hub') targetScrollSection = 'settings-costs';
     else if (tab === 'memories') targetScrollSection = 'settings-memories';
     else if (tab === 'logs') targetScrollSection = 'settings-logs';
+    else if (tab === 'webhooks') targetScrollSection = 'settings-webhooks';
     else if (tab === 'system') targetScrollSection = 'settings-system';
     tab = 'settings';
   }

@@ -70,10 +70,6 @@
           <i class="fa-solid fa-bolt"></i>
           <span>Skills</span>
         </button>
-        <button class="nav-item" data-tab="webhooks">
-          <i class="fa-solid fa-network-wired"></i>
-          <span>Webhooks</span>
-        </button>
         <button class="nav-item" data-tab="crons">
           <i class="fa-solid fa-clock-rotate-left"></i>
           <span>Crons</span>
@@ -353,59 +349,6 @@
         </div>
       </section>
 
-      <!-- TAB: Webhooks & Workers Hub -->
-      <section class="tab-panel" id="tab-webhooks">
-        <div class="panel-header-actions">
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">
-              <i class="fa-solid fa-network-wired"></i> Webhooks & Integrações Externas
-            </h3>
-            <p style="font-size: 0.84rem; color: var(--color-slate); margin-top: 2px;">
-              Envie alertas e dados de qualquer aplicativo (n8n, Make, ERPs, scripts) para o WhatsApp e Workspace.
-            </p>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 16px;">
-          <!-- Card de Endpoint de Notificação -->
-          <div class="bento-module-card">
-            <div class="bento-module-header">
-              <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0;"><i class="fa-brands fa-whatsapp" style="color: var(--color-mint);"></i> Webhook de Notificações WhatsApp</h3>
-              <span class="badge badge-mint">Ativo</span>
-            </div>
-            <div style="font-size: 0.85rem; color: var(--color-slate); margin-bottom: 12px; margin-top: 6px;">
-              Endpoint universal para entregar relatórios e alertas diretamente no seu WhatsApp:
-            </div>
-            <div class="webhook-url-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 8px 12px;">
-              <code style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyprus); font-weight: 600;">https://b-os.malves.dev.br/api/webhook/notify</code>
-              <button class="btn btn-secondary btn-xs" onclick="navigator.clipboard.writeText('https://b-os.malves.dev.br/api/webhook/notify'); showToast('URL copiada!', 'success');"><i class="fa-solid fa-copy"></i> Copiar</button>
-            </div>
-            <div style="font-size: 0.78rem; color: var(--color-muted); margin-top: 8px;">
-              Token: <code>business_master_secret_2026</code> (via body JSON, header <code>x-webhook-token</code> ou query <code>?token=</code>).
-            </div>
-          </div>
-
-          <!-- Card de Endpoint de Auto-Deploy -->
-          <div class="bento-module-card">
-            <div class="bento-module-header">
-              <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0;"><i class="fa-brands fa-github" style="color: var(--color-cyprus);"></i> Auto-Deploy Remoto HTTP & Git</h3>
-              <span class="badge badge-cyprus">Branch: main</span>
-            </div>
-            <div style="font-size: 0.85rem; color: var(--color-slate); margin-bottom: 12px; margin-top: 6px;">
-              Dispara atualização remota do repositório no servidor sem precisar de SSH:
-            </div>
-            <div class="webhook-url-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 8px 12px;">
-              <code style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyprus); font-weight: 600;">https://b-os.malves.dev.br/api/system/deploy</code>
-              <button class="btn btn-secondary btn-xs" onclick="navigator.clipboard.writeText('https://b-os.malves.dev.br/api/system/deploy'); showToast('URL copiada!', 'success');"><i class="fa-solid fa-copy"></i> Copiar</button>
-            </div>
-            <div style="font-size: 0.78rem; color: var(--color-muted); margin-top: 8px;">
-              Header: <code>x-deploy-key: business_master_secret_2026</code>.
-            </div>
-          </div>
-        </div>
-      </section>
-
-
       <!-- TAB 2: Agenda & Tarefas -->
       <section class="tab-panel" id="tab-tasks">
         <div class="panel-header-actions">
@@ -452,6 +395,7 @@
           <a href="#settings-costs" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-coins"></i> Custos e Usos</a>
           <a href="#settings-memories" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-brain"></i> Memória</a>
           <a href="#settings-logs" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-terminal"></i> Terminal de Logs</a>
+          <a href="#settings-webhooks" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-network-wired"></i> Webhooks & Integrações</a>
           <a href="#settings-system" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-sliders"></i> Sistema & Preferências</a>
         </div>
 
@@ -760,7 +704,57 @@
           </div>
         </div>
 
-        <!-- SEÇÃO 4: STATUS DO SISTEMA & PREFERÊNCIAS -->
+        <!-- SEÇÃO 4: WEBHOOKS & INTEGRAÇÕES EXTERNAS -->
+        <div class="settings-section" id="settings-webhooks" style="padding-top: 28px; border-top: 1px solid var(--color-sand-border); margin-bottom: 28px;">
+          <div class="settings-section-header" style="margin-bottom: 18px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-network-wired" style="color: var(--color-mint);"></i> Webhooks & Integrações Externas
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--color-slate); margin: 4px 0 0 0;">
+              Envie alertas e dados de qualquer aplicativo (n8n, Make, ERPs, scripts) para o WhatsApp e Workspace.
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 16px;">
+            <!-- Card de Endpoint de Notificação -->
+            <div class="bento-module-card">
+              <div class="bento-module-header">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0;"><i class="fa-brands fa-whatsapp" style="color: var(--color-mint);"></i> Webhook de Notificações WhatsApp</h3>
+                <span class="badge badge-mint">Ativo</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--color-slate); margin-bottom: 12px; margin-top: 6px;">
+                Endpoint universal para entregar relatórios e alertas diretamente no seu WhatsApp:
+              </div>
+              <div class="webhook-url-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 8px 12px;">
+                <code style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyprus); font-weight: 600;">https://b-os.malves.dev.br/api/webhook/notify</code>
+                <button class="btn btn-secondary btn-xs" onclick="navigator.clipboard.writeText('https://b-os.malves.dev.br/api/webhook/notify'); showToast('URL copiada!', 'success');"><i class="fa-solid fa-copy"></i> Copiar</button>
+              </div>
+              <div style="font-size: 0.78rem; color: var(--color-muted); margin-top: 8px;">
+                Token: <code>business_master_secret_2026</code> (via body JSON, header <code>x-webhook-token</code> ou query <code>?token=</code>).
+              </div>
+            </div>
+
+            <!-- Card de Endpoint de Auto-Deploy -->
+            <div class="bento-module-card">
+              <div class="bento-module-header">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin: 0;"><i class="fa-brands fa-github" style="color: var(--color-cyprus);"></i> Auto-Deploy Remoto HTTP & Git</h3>
+                <span class="badge badge-cyprus">Branch: main</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--color-slate); margin-bottom: 12px; margin-top: 6px;">
+                Dispara atualização remota do repositório no servidor sem precisar de SSH:
+              </div>
+              <div class="webhook-url-box" style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 8px 12px;">
+                <code style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyprus); font-weight: 600;">https://b-os.malves.dev.br/api/system/deploy</code>
+                <button class="btn btn-secondary btn-xs" onclick="navigator.clipboard.writeText('https://b-os.malves.dev.br/api/system/deploy'); showToast('URL copiada!', 'success');"><i class="fa-solid fa-copy"></i> Copiar</button>
+              </div>
+              <div style="font-size: 0.78rem; color: var(--color-muted); margin-top: 8px;">
+                Header: <code>x-deploy-key: business_master_secret_2026</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 5: STATUS DO SISTEMA & PREFERÊNCIAS -->
         <div class="settings-section" id="settings-system" style="padding-top: 28px; border-top: 1px solid var(--color-sand-border);">
           <div class="settings-section-header" style="margin-bottom: 18px;">
             <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
