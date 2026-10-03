@@ -66,7 +66,7 @@ export async function systemRoutes(app: FastifyInstance) {
       let prismaLog = '';
       try {
         const pGen = await execAsync('npx prisma generate');
-        const pPush = await execAsync('npx prisma db push --skip-generate 2>/dev/null || npx prisma migrate deploy 2>/dev/null || true');
+        const pPush = await execAsync('npx prisma db push --accept-data-loss --skip-generate 2>/dev/null || npx prisma migrate deploy 2>/dev/null || true');
         prismaLog = `${pGen.stdout}\n${pPush.stdout}`;
       } catch (pErr: any) {
         prismaLog = `Aviso Prisma: ${pErr.message}`;
