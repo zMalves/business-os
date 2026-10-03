@@ -24,9 +24,12 @@ export class KlimaPartsService {
   private patToken: string;
   private defaultStoreId: number;
 
+  private schemaToken: string;
+
   constructor() {
     this.apiUrl = (process.env.KLIMAPARTS_API_URL || 'https://api.malves.dev.br/klimaparts').replace(/\/$/, '');
     this.patToken = process.env.KLIMAPARTS_PAT_TOKEN || 'KP-PAT-PROD-234d97c3b74b6cff0bef74bd1d02a432a28c68ad32df62c6';
+    this.schemaToken = process.env.KLIMAPARTS_SCHEMA_TOKEN || 'kp_schema_sec_9f83a7c41b802e5d6a3b4e9f0c2a5d8b7e1f4a9c3b2e5d7a8f0c1b4e6a8d9f2';
     this.defaultStoreId = parseInt(process.env.KLIMAPARTS_DEFAULT_STORE_ID || '1', 10);
   }
 
@@ -37,6 +40,111 @@ export class KlimaPartsService {
       'X-MCP-Token': this.patToken,
       'X-Agent-Name': 'Victoria-Business-OS',
     };
+  }
+
+  /**
+   * Executa consulta SQL direta no banco da KlimaParts/ArmorCar via Schema Manager
+   */
+  async execRawSql(sql: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.apiUrl}/backend/schema_manager.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Schema-Token': this.schemaToken,
+        },
+        body: JSON.stringify({ action: 'execute_query', sql }),
+      });
+      if (response.ok) {
+        return (await response.json()) as any;
+      }
+      return { success: false, error: `HTTP ${response.status}` };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Executa a consolidação de vendas e métricas por dias civis inteiros (00:00:00 no fuso de SP)
+   * - 1 dia: Estritamente de hoje 00:00:00 (meia-noite) até o momento atual
+   * - N dias: Dias civis inteiros a partir de (N - 1) dias atrás à meia-noite
+   */
+  async fetchStoreOverviewDirectFromDb(storeId: number, days: number = 30) {
+    try {
+      const dateClause = days === 1
+        ? `v.date_created >= CURDATE()`
+        : `v.date_created >= DATE_SUB(CURDATE(), INTERVAL ${days - 1} DAY)`;
+
+      const summarySql = `
+        SELECT COUNT(*) as total_orders,
+               COALESCE(SUM(gross_price), 0) as total_revenue,
+               COALESCE(SUM(net_profit), 0) as total_net_profit,
+               COALESCE(AVG(gross_price), 0) as avg_ticket
+        FROM vendas v
+        WHERE v.store_id = ${storeId}
+          AND ${dateClause}
+          AND (v.status IS NULL OR LOWER(v.status) NOT IN ('cancelled', 'canceled'))
+      `;
+
+      const topSql = `
+        SELECT vi.sku, vi.title, 
+               COUNT(*) as orders_count,
+               SUM(vi.quantity) as units_sold,
+               SUM(vi.unit_price * vi.quantity) as gross_revenue
+        FROM venda_items vi
+        JOIN vendas v ON v.order_id = vi.order_id
+        WHERE v.store_id = ${storeId}
+          AND ${dateClause}
+          AND (v.status IS NULL OR LOWER(v.status) NOT IN ('cancelled', 'canceled'))
+          AND vi.sku IS NOT NULL AND vi.sku != ''
+        GROUP BY vi.sku
+        ORDER BY gross_revenue DESC
+        LIMIT 5
+      `;
+
+      const [sumRes, topRes] = await Promise.all([
+        this.execRawSql(summarySql),
+        this.execRawSql(topSql),
+      ]);
+
+      if (sumRes && sumRes.success && sumRes.rows && sumRes.rows.length > 0) {
+        const s = sumRes.rows[0];
+        const rev = Number(s.total_revenue || 0);
+        const profit = Number(s.total_net_profit || 0);
+        const marginPerc = rev > 0 ? Number(((profit / rev) * 100).toFixed(2)) : 0;
+        const totalOrders = parseInt(s.total_orders || '0', 10);
+        const avgTicket = Number(Number(s.avg_ticket || 0).toFixed(2));
+
+        const storeName = storeId === 2 ? 'ArmorCar' : 'KlimaParts';
+        const topSkus = (topRes?.rows || []).map((r: any) => ({
+          sku: r.sku,
+          title: r.title,
+          units_sold: parseInt(r.units_sold || '0', 10),
+          gross_revenue: Number(r.gross_revenue || 0),
+        }));
+
+        return {
+          success: true,
+          period_days: days,
+          store_id: storeId,
+          store_name: storeName,
+          metrics: {
+            total_revenue: rev,
+            total_net_profit: profit,
+            average_margin_perc: marginPerc,
+            total_orders: totalOrders,
+            average_ticket: avgTicket,
+          },
+          top_selling_skus: topSkus,
+        };
+      }
+
+      // Fallback para API MCP se schema_manager não responder
+      return await this.fetchStoreOverviewFromApi(storeId, days);
+    } catch (err: any) {
+      loggerService.error('system', `[KlimaPartsService] Erro ao consultar vendas diretas do DB: ${err.message}`);
+      return await this.fetchStoreOverviewFromApi(storeId, days);
+    }
   }
 
   /**
@@ -73,7 +181,7 @@ export class KlimaPartsService {
 
   /**
    * Sincroniza todas as informações das lojas do Mercado Livre (KlimaParts + ArmorCar)
-   * direto no banco de dados MariaDB (tabela mercadolivre_store_cache)
+   * direto no banco de dados MariaDB (tabela mercadolivre_store_cache) por dias inteiros civis
    */
   async syncAllStoresDataToDatabase() {
     const startTime = Date.now();
@@ -99,10 +207,10 @@ export class KlimaPartsService {
         questionsRes = { count: 0, questions: [] };
       }
 
-      // 2. Sincroniza cada período (Hoje, 7 dias, 30 dias)
+      // 2. Sincroniza cada período (Hoje, 7 dias, 30 dias) usando dias inteiros civis
       for (const p of periods) {
         try {
-          const apiRes = await this.fetchStoreOverviewFromApi(store.id, p.days);
+          const apiRes = await this.fetchStoreOverviewDirectFromDb(store.id, p.days);
           if (apiRes.success) {
             const metrics = apiRes.metrics || {};
             const topSkus = apiRes.top_selling_skus || [];
@@ -209,8 +317,8 @@ export class KlimaPartsService {
       }
     }
 
-    // Se não estiver no cache ou se forçar atualização, consulta a API e salva no banco
-    const apiRes = await this.fetchStoreOverviewFromApi(storeId, days);
+    // Se não estiver no cache ou se forçar atualização, consulta o banco por dias inteiros e salva no cache
+    const apiRes = await this.fetchStoreOverviewDirectFromDb(storeId, days);
     if (apiRes.success) {
       const storeName = storeId === 2 ? 'ArmorCar' : 'KlimaParts';
       const metrics = apiRes.metrics || {};
