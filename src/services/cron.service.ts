@@ -3,6 +3,9 @@ import { loggerService } from './logger.service.js';
 import { whatsappService } from './whatsapp.service.js';
 import { googleService } from './google.service.js';
 import { SecretaryAgent } from '../agents/agent.js';
+import { klimaPartsService } from './klimaparts.service.js';
+import { metaService } from './meta.service.js';
+import { taskService } from './task.service.js';
 
 let CronClass: any = null;
 async function getCron() {
@@ -103,12 +106,77 @@ export class CronService {
         loggerService.system('⏰ Job padrão de Fechamento Diário criado para as 18:00 (Fuso de SP - Google Tasks / 0 Tokens).');
       }
 
-      // 3. Carrega e ativa todos os jobs marcados como ativos
+      // 3. Garante o job de Sincronização Contínua de Dados a cada 2 minutos (ML, Meta, Tarefas)
+      const syncJob = await prisma.scheduledJob.findFirst({
+        where: {
+          OR: [
+            { actionType: 'system_data_sync' },
+            { title: { contains: 'Sincronização Contínua' } },
+          ],
+        },
+      });
+      if (!syncJob) {
+        await prisma.scheduledJob.create({
+          data: {
+            title: 'Sincronização Contínua de Dados (ML, Meta, Tarefas)',
+            cronExpr: '*/2 * * * *',
+            timezone: 'America/Sao_Paulo',
+            actionType: 'system_data_sync',
+            prompt: 'Sincroniza automaticamente a cada 2 minutos as lojas do Mercado Livre, contas Meta e Google Tasks diretamente no MariaDB.',
+            isActive: true,
+          },
+        });
+        loggerService.system('⏰ Job de Sincronização Contínua criado para execução a cada 2 minutos (*/2 * * * *).');
+      }
+
+      // 4. Carrega e ativa todos os jobs marcados como ativos
       await this.loadAllJobs();
       loggerService.system('⏰ Motor de Crons e Automações da Victoria ativo e sincronizado!');
+
+      // 5. Dispara sincronização inicial em background após 3 segundos
+      setTimeout(() => {
+        this.syncAllSystemData().catch(() => {});
+      }, 3000);
     } catch (error: any) {
       loggerService.error('system', `Falha ao inicializar CronService: ${error.message}`);
     }
+  }
+
+  /**
+   * Sincroniza todos os dados do ecossistema no banco de dados MariaDB:
+   * 1. Lojas do Mercado Livre (KlimaParts + ArmorCar)
+   * 2. Contas Meta (Instagram, Facebook e Anúncios)
+   * 3. Google Tasks (Tarefas)
+   */
+  async syncAllSystemData() {
+    const startTime = Date.now();
+    loggerService.system('🔄 [Cron 2m] Iniciando sincronização contínua de dados no banco (ML, Meta, Tarefas)...');
+
+    const [mlRes, metaRes, tasksRes] = await Promise.allSettled([
+      klimaPartsService.syncAllStoresDataToDatabase(),
+      metaService.syncAllMetaMetrics(),
+      taskService.syncGoogleTasksToDatabase(),
+    ]);
+
+    const durationMs = Date.now() - startTime;
+    const mlSuccess = mlRes.status === 'fulfilled' && (mlRes.value as any)?.success;
+    const metaSuccess = metaRes.status === 'fulfilled' && (metaRes.value as any)?.success;
+    const tasksSuccess = tasksRes.status === 'fulfilled' && (tasksRes.value as any)?.success;
+
+    loggerService.system(
+      `✅ [Cron 2m] Sincronização concluída em ${durationMs}ms | ML: ${mlSuccess ? 'OK' : 'Falha'} · Meta: ${metaSuccess ? 'OK' : 'Falha'} · Tarefas: ${tasksSuccess ? 'OK' : 'Falha'}`
+    );
+
+    return {
+      success: true,
+      durationMs,
+      timestamp: new Date().toISOString(),
+      results: {
+        mercadolivre: mlRes.status === 'fulfilled' ? mlRes.value : { success: false, error: (mlRes as any).reason?.message },
+        meta: metaRes.status === 'fulfilled' ? metaRes.value : { success: false, error: (metaRes as any).reason?.message },
+        tasks: tasksRes.status === 'fulfilled' ? tasksRes.value : { success: false, error: (tasksRes as any).reason?.message },
+      },
+    };
   }
 
   /**
@@ -184,7 +252,19 @@ export class CronService {
       const targetNumber = job.targetNumber || (process.env.WHATSAPP_ALLOWED_NUMBERS || '5541995852423').split(',')[0].trim();
       let generatedMessage = '';
 
-      if (job.actionType === 'daily_briefing') {
+      if (job.actionType === 'system_data_sync') {
+        const syncResult = await this.syncAllSystemData();
+        const durationMs = Date.now() - startTime;
+        const nextRun = this.activeJobs.get(job.id)?.nextRun();
+        await prisma.scheduledJob.update({
+          where: { id: job.id },
+          data: {
+            lastRunAt: new Date(),
+            nextRunAt: nextRun || null,
+          },
+        });
+        return { success: true, message: 'Sincronização de dados executada com sucesso no MariaDB!', syncResult, durationMs };
+      } else if (job.actionType === 'daily_briefing') {
         generatedMessage = await this.generateDailyBriefing();
       } else if (job.actionType === 'evening_pending_tasks' || job.actionType === 'tasks_pending_review') {
         generatedMessage = await this.generateEveningPendingTasks();
@@ -281,12 +361,12 @@ export class CronService {
         ? eventsLines.join('\n')
         : '_Nenhum compromisso agendado no Calendar para hoje._';
 
-    // 2. Google Tasks (Exclusivamente via API Google Tasks)
+    // 2. Google Tasks (Lê diretamente da base sincronizada no MariaDB)
     let taskLines: string[] = [];
     try {
-      const gRes = await googleService.listGoogleTasks({ showCompleted: false, maxResults: 50 });
-      if (gRes.connected && Array.isArray(gRes.tasks) && gRes.tasks.length > 0) {
-        taskLines = gRes.tasks.map((t: any) => {
+      const dbTasks = await taskService.getAllTasks({ status: 'PENDING' as any });
+      if (Array.isArray(dbTasks) && dbTasks.length > 0) {
+        taskLines = dbTasks.map((t: any) => {
           let dateBadge = '';
           if (t.dueDate) {
             const dueObj = new Date(t.dueDate);
@@ -302,7 +382,7 @@ export class CronService {
         });
       }
     } catch (err: any) {
-      loggerService.error('system', `Erro ao buscar Google Tasks para resumo matinal: ${err.message}`);
+      loggerService.error('system', `Erro ao buscar tarefas do banco para resumo matinal: ${err.message}`);
     }
 
     const tasksCount = taskLines.length;
@@ -342,12 +422,9 @@ ${tasksSection}
 
     let pendingTasks: any[] = [];
     try {
-      const gRes = await googleService.listGoogleTasks({ showCompleted: false, maxResults: 50 });
-      if (gRes.connected && Array.isArray(gRes.tasks)) {
-        pendingTasks = gRes.tasks;
-      }
+      pendingTasks = await taskService.getAllTasks({ status: 'PENDING' as any });
     } catch (err: any) {
-      loggerService.error('system', `Erro ao buscar tarefas para fechamento diário do Google Tasks: ${err.message}`);
+      loggerService.error('system', `Erro ao buscar tarefas do banco para fechamento diário: ${err.message}`);
     }
 
     if (pendingTasks.length === 0) {

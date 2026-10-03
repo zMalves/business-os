@@ -2808,6 +2808,113 @@ ${postsSummary}`;
   }
 
   /**
+   * Sincroniza métricas e dados de páginas do Facebook e perfis do Instagram no MariaDB
+   */
+  async syncAllMetaSocialMetrics() {
+    try {
+      const clients = await prisma.metaClient.findMany({
+        where: { isActive: true },
+        include: { profile: true },
+      });
+
+      let syncedCount = 0;
+      for (const client of clients) {
+        if (!client.profile?.accessToken || !client.profile?.isActive) continue;
+
+        let igData: any = null;
+        let fbData: any = null;
+
+        if (client.instagramAccountId) {
+          try {
+            const igRes = await this.getInstagramInsights(client.id, { days: 30 });
+            if (igRes.success) igData = igRes;
+          } catch {}
+        }
+
+        if (client.facebookPageId) {
+          try {
+            const fbRes = await this.getFacebookPageInsights(client.id);
+            if (fbRes.success) fbData = fbRes;
+          } catch {}
+        }
+
+        if (igData || fbData) {
+          const igMetrics = igData?.metrics || {};
+          const igProfile = igData?.profile || {};
+          const fbPage = fbData?.page || {};
+
+          await prisma.metaSocialCache.upsert({
+            where: { clientId: client.id },
+            update: {
+              clientName: client.name,
+              instagramAccountId: client.instagramAccountId,
+              instagramUsername: igProfile.username || client.instagramUsername,
+              instagramFollowers: Number(igProfile.followersCount || 0),
+              instagramMediaCount: Number(igProfile.mediaCount || 0),
+              instagramReach: Number(igMetrics.reach || 0),
+              instagramImpressions: Number(igMetrics.impressions || 0),
+              instagramEngagement: Number(igMetrics.engagementRate || 0),
+              facebookPageId: client.facebookPageId,
+              facebookPageName: fbPage.name || client.facebookPageName,
+              facebookFans: Number(fbPage.fanCount || 0),
+              facebookFollowers: Number(fbPage.followersCount || 0),
+              rawInstagram: igData as any,
+              rawFacebook: fbData as any,
+              lastSyncAt: new Date(),
+            },
+            create: {
+              clientId: client.id,
+              clientName: client.name,
+              instagramAccountId: client.instagramAccountId,
+              instagramUsername: igProfile.username || client.instagramUsername,
+              instagramFollowers: Number(igProfile.followersCount || 0),
+              instagramMediaCount: Number(igProfile.mediaCount || 0),
+              instagramReach: Number(igMetrics.reach || 0),
+              instagramImpressions: Number(igMetrics.impressions || 0),
+              instagramEngagement: Number(igMetrics.engagementRate || 0),
+              facebookPageId: client.facebookPageId,
+              facebookPageName: fbPage.name || client.facebookPageName,
+              facebookFans: Number(fbPage.fanCount || 0),
+              facebookFollowers: Number(fbPage.followersCount || 0),
+              rawInstagram: igData as any,
+              rawFacebook: fbData as any,
+              lastSyncAt: new Date(),
+            },
+          });
+          syncedCount++;
+        }
+      }
+
+      loggerService.system(`📸 [Meta Social Sync] ${syncedCount} contas sociais (Instagram/Facebook) sincronizadas no MariaDB.`);
+      return { success: true, syncedCount };
+    } catch (err: any) {
+      loggerService.error('system', `Erro na sincronização de redes sociais Meta: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Sincronização unificada de Meta (Anúncios + Redes Sociais) no banco de dados MariaDB
+   */
+  async syncAllMetaMetrics() {
+    const startTime = Date.now();
+    const [adsToday, adsLast30d, social] = await Promise.all([
+      this.syncAllMetaAdsMetrics('today').catch((e) => ({ success: false, error: e.message })),
+      this.syncAllMetaAdsMetrics('last_30d').catch((e) => ({ success: false, error: e.message })),
+      this.syncAllMetaSocialMetrics().catch((e) => ({ success: false, error: e.message })),
+    ]);
+
+    const durationMs = Date.now() - startTime;
+    return {
+      success: true,
+      durationMs,
+      adsToday,
+      adsLast30d,
+      social,
+    };
+  }
+
+  /**
    * Obtém os dados consolidados do cache do banco de dados (Resposta ultra rápida em <5ms)
    */
   async getConsolidatedOverview(datePreset: string = 'today') {

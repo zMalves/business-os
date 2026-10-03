@@ -332,5 +332,19 @@ export async function systemRoutes(app: FastifyInstance) {
       return reply.status(500).send({ success: false, error: err.message });
     }
   });
+
+  /**
+   * Endpoint para disparar sincronização forçada de todos os dados no banco
+   * (Mercado Livre, Contas Meta e Tarefas)
+   */
+  app.post('/system/sync-data', async (_req, reply) => {
+    try {
+      const { cronService } = await import('../services/cron.service.js');
+      const result = await cronService.syncAllSystemData();
+      return reply.send(result);
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, error: err.message });
+    }
+  });
 }
 

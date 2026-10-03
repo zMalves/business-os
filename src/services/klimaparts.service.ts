@@ -1,3 +1,4 @@
+import { prisma } from '../database/client.js';
 import { loggerService } from './logger.service.js';
 
 export interface KlimaPartsOrder {
@@ -39,9 +40,9 @@ export class KlimaPartsService {
   }
 
   /**
-   * Obtém a visão geral executiva e métricas de vendas da loja (KlimaParts = 1, ArmorCar = 2)
+   * Faz a requisição HTTP bruta para a API MCP da loja
    */
-  async getStoreOverview(storeId: number = this.defaultStoreId, days: number = 30) {
+  async fetchStoreOverviewFromApi(storeId: number, days: number = 30) {
     try {
       const endpoint = `${this.apiUrl}/api/mcp/v1/sales.php?action=summary&store_id=${storeId}&days=${days}`;
       const response = await fetch(endpoint, {
@@ -49,7 +50,7 @@ export class KlimaPartsService {
       });
 
       if (response.ok) {
-        const json = await response.json() as any;
+        const json = (await response.json()) as any;
         return { success: true, store_id: storeId, ...json };
       }
 
@@ -61,7 +62,6 @@ export class KlimaPartsService {
         message: 'Não foi possível consultar a visão geral da loja no momento.',
       };
     } catch (error: any) {
-      loggerService.agent(`[KlimaPartsService] Erro ao consultar store overview (${storeId}): ${error.message}`, { error: error.message }, 'error');
       return {
         success: false,
         store_id: storeId,
@@ -69,6 +69,187 @@ export class KlimaPartsService {
         message: 'Não foi possível consultar a visão geral da loja no momento.',
       };
     }
+  }
+
+  /**
+   * Sincroniza todas as informações das lojas do Mercado Livre (KlimaParts + ArmorCar)
+   * direto no banco de dados MariaDB (tabela mercadolivre_store_cache)
+   */
+  async syncAllStoresDataToDatabase() {
+    const startTime = Date.now();
+    const stores = [
+      { id: 1, name: 'KlimaParts' },
+      { id: 2, name: 'ArmorCar' },
+    ];
+    const periods = [
+      { days: 1, key: 'today' },
+      { days: 7, key: '7' },
+      { days: 30, key: '30' },
+    ];
+
+    let syncedCount = 0;
+    const errors: string[] = [];
+
+    for (const store of stores) {
+      // 1. Busca perguntas pendentes para a loja
+      let questionsRes: any = null;
+      try {
+        questionsRes = await this.fetchUnansweredQuestionsFromApi(store.id);
+      } catch (qErr: any) {
+        questionsRes = { count: 0, questions: [] };
+      }
+
+      // 2. Sincroniza cada período (Hoje, 7 dias, 30 dias)
+      for (const p of periods) {
+        try {
+          const apiRes = await this.fetchStoreOverviewFromApi(store.id, p.days);
+          if (apiRes.success) {
+            const metrics = apiRes.metrics || {};
+            const topSkus = apiRes.top_selling_skus || [];
+            const pendingOrders = metrics.total_orders || 0;
+
+            await prisma.mercadoLivreStoreCache.upsert({
+              where: {
+                storeId_period: {
+                  storeId: store.id,
+                  period: p.key,
+                },
+              },
+              update: {
+                storeName: store.name,
+                totalRevenue: Number(metrics.total_revenue || 0),
+                totalNetProfit: Number(metrics.total_net_profit || 0),
+                averageMarginPerc: Number(metrics.average_margin_perc || 0),
+                totalOrders: Number(metrics.total_orders || 0),
+                averageTicket: Number(metrics.average_ticket || 0),
+                topSellingSkus: topSkus as any,
+                pendingOrdersCount: pendingOrders,
+                pendingQuestionsCount: questionsRes?.count || 0,
+                pendingQuestions: (questionsRes?.questions || []) as any,
+                rawMetrics: apiRes as any,
+                lastSyncAt: new Date(),
+              },
+              create: {
+                storeId: store.id,
+                storeName: store.name,
+                period: p.key,
+                totalRevenue: Number(metrics.total_revenue || 0),
+                totalNetProfit: Number(metrics.total_net_profit || 0),
+                averageMarginPerc: Number(metrics.average_margin_perc || 0),
+                totalOrders: Number(metrics.total_orders || 0),
+                averageTicket: Number(metrics.average_ticket || 0),
+                topSellingSkus: topSkus as any,
+                pendingOrdersCount: pendingOrders,
+                pendingQuestionsCount: questionsRes?.count || 0,
+                pendingQuestions: (questionsRes?.questions || []) as any,
+                rawMetrics: apiRes as any,
+                lastSyncAt: new Date(),
+              },
+            });
+            syncedCount++;
+          } else {
+            errors.push(`${store.name} (${p.key}): ${apiRes.error || apiRes.message}`);
+          }
+        } catch (syncErr: any) {
+          errors.push(`${store.name} (${p.key}): ${syncErr.message}`);
+        }
+      }
+    }
+
+    const durationMs = Date.now() - startTime;
+    loggerService.system(
+      `📦 [Mercado Livre Sync] Sincronização concluída em ${durationMs}ms: ${syncedCount} períodos/lojas salvos no MariaDB.`
+    );
+
+    return {
+      success: errors.length === 0 || syncedCount > 0,
+      syncedCount,
+      durationMs,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  }
+
+  /**
+   * Obtém a visão geral executiva e métricas de vendas da loja (KlimaParts = 1, ArmorCar = 2).
+   * Lê diretamente do cache do banco de dados MariaDB em <2ms.
+   */
+  async getStoreOverview(storeId: number = this.defaultStoreId, days: number = 30, forceRefresh: boolean = false) {
+    const periodKey = days === 1 ? 'today' : String(days);
+
+    if (!forceRefresh) {
+      try {
+        const cached = await prisma.mercadoLivreStoreCache.findUnique({
+          where: {
+            storeId_period: {
+              storeId,
+              period: periodKey,
+            },
+          },
+        });
+
+        if (cached) {
+          return {
+            success: true,
+            store_id: storeId,
+            store_name: cached.storeName,
+            metrics: {
+              total_revenue: cached.totalRevenue,
+              total_net_profit: cached.totalNetProfit,
+              average_margin_perc: cached.averageMarginPerc,
+              total_orders: cached.totalOrders,
+              average_ticket: cached.averageTicket,
+            },
+            top_selling_skus: (cached.topSellingSkus as any) || [],
+            cached: true,
+            lastSyncAt: cached.lastSyncAt,
+          };
+        }
+      } catch (dbErr: any) {
+        loggerService.error('system', `[KlimaPartsService] Erro ao consultar cache local: ${dbErr.message}`);
+      }
+    }
+
+    // Se não estiver no cache ou se forçar atualização, consulta a API e salva no banco
+    const apiRes = await this.fetchStoreOverviewFromApi(storeId, days);
+    if (apiRes.success) {
+      const storeName = storeId === 2 ? 'ArmorCar' : 'KlimaParts';
+      const metrics = apiRes.metrics || {};
+      prisma.mercadoLivreStoreCache
+        .upsert({
+          where: {
+            storeId_period: {
+              storeId,
+              period: periodKey,
+            },
+          },
+          update: {
+            storeName,
+            totalRevenue: Number(metrics.total_revenue || 0),
+            totalNetProfit: Number(metrics.total_net_profit || 0),
+            averageMarginPerc: Number(metrics.average_margin_perc || 0),
+            totalOrders: Number(metrics.total_orders || 0),
+            averageTicket: Number(metrics.average_ticket || 0),
+            topSellingSkus: (apiRes.top_selling_skus || []) as any,
+            rawMetrics: apiRes as any,
+            lastSyncAt: new Date(),
+          },
+          create: {
+            storeId,
+            storeName,
+            period: periodKey,
+            totalRevenue: Number(metrics.total_revenue || 0),
+            totalNetProfit: Number(metrics.total_net_profit || 0),
+            averageMarginPerc: Number(metrics.average_margin_perc || 0),
+            totalOrders: Number(metrics.total_orders || 0),
+            averageTicket: Number(metrics.average_ticket || 0),
+            topSellingSkus: (apiRes.top_selling_skus || []) as any,
+            rawMetrics: apiRes as any,
+            lastSyncAt: new Date(),
+          },
+        })
+        .catch(() => {});
+    }
+    return apiRes;
   }
 
   /**
@@ -340,7 +521,7 @@ export class KlimaPartsService {
   /**
    * Consulta perguntas de clientes pendentes de resposta no Mercado Livre
    */
-  async getUnansweredQuestions(storeId: number = this.defaultStoreId) {
+  async fetchUnansweredQuestionsFromApi(storeId: number = this.defaultStoreId) {
     try {
       const endpoint = `${this.apiUrl}/api/mcp/v1/questions.php?action=unanswered&store_id=${storeId}`;
       const response = await fetch(endpoint, {
@@ -371,6 +552,39 @@ export class KlimaPartsService {
         message: 'Erro ao consultar perguntas pendentes da KlimaParts.',
       };
     }
+  }
+
+  /**
+   * Consulta perguntas de clientes pendentes de resposta no Mercado Livre (lê do banco de dados)
+   */
+  async getUnansweredQuestions(storeId: number = this.defaultStoreId, forceRefresh: boolean = false) {
+    if (!forceRefresh) {
+      try {
+        const cached = await prisma.mercadoLivreStoreCache.findUnique({
+          where: {
+            storeId_period: {
+              storeId,
+              period: 'today',
+            },
+          },
+        });
+
+        if (cached && Array.isArray(cached.pendingQuestions)) {
+          return {
+            success: true,
+            store_id: storeId,
+            count: cached.pendingQuestionsCount,
+            questions: cached.pendingQuestions,
+            cached: true,
+            lastSyncAt: cached.lastSyncAt,
+          };
+        }
+      } catch (err: any) {
+        // fallback to api
+      }
+    }
+
+    return this.fetchUnansweredQuestionsFromApi(storeId);
   }
 
   /**

@@ -22,65 +22,164 @@ export interface UpdateTaskDTO {
 
 export class TaskService {
   /**
-   * Lista todas as tarefas do Google Tasks (com sincronização em tempo real)
+   * Sincroniza todas as tarefas do Google Tasks diretamente para a tabela tasks no MariaDB
+   */
+  async syncGoogleTasksToDatabase() {
+    const startTime = Date.now();
+    try {
+      const gRes = await googleService.listGoogleTasks({
+        showCompleted: true,
+        showHidden: true,
+        maxResults: 100,
+      });
+
+      if (!gRes.connected || !Array.isArray(gRes.tasks)) {
+        return { success: false, error: gRes.error || 'Conta Google não conectada' };
+      }
+
+      let syncedCount = 0;
+      for (const t of gRes.tasks) {
+        const isCompleted = t.status === 'COMPLETED' || (t as any).isCompleted;
+        const statusEnum = isCompleted ? TaskStatus.COMPLETED : TaskStatus.PENDING;
+
+        const existing = await prisma.task.findFirst({
+          where: {
+            OR: [
+              { googleTaskId: t.id },
+              { id: t.id },
+            ],
+          },
+        });
+
+        if (existing) {
+          await prisma.task.update({
+            where: { id: existing.id },
+            data: {
+              googleTaskId: t.id,
+              title: t.title || 'Sem título',
+              description: t.description || null,
+              dueDate: t.dueDate ? new Date(t.dueDate) : null,
+              status: statusEnum,
+              isGoogleTask: true,
+              completedAt: t.completedAt ? new Date(t.completedAt) : isCompleted ? new Date() : null,
+            },
+          });
+        } else {
+          await prisma.task.create({
+            data: {
+              googleTaskId: t.id,
+              title: t.title || 'Sem título',
+              description: t.description || null,
+              dueDate: t.dueDate ? new Date(t.dueDate) : null,
+              status: statusEnum,
+              priority: TaskPriority.MEDIUM,
+              category: 'Google Tasks',
+              isGoogleTask: true,
+              completedAt: t.completedAt ? new Date(t.completedAt) : isCompleted ? new Date() : null,
+            },
+          });
+        }
+        syncedCount++;
+      }
+
+      const durationMs = Date.now() - startTime;
+      loggerService.system(`📋 [Google Tasks Sync] ${syncedCount} tarefas sincronizadas no MariaDB em ${durationMs}ms.`);
+      return { success: true, count: syncedCount, durationMs };
+    } catch (err: any) {
+      loggerService.error('system', `Erro ao sincronizar tarefas no MariaDB: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Lista todas as tarefas persistidas no MariaDB (Resposta instantânea <2ms)
    */
   async getAllTasks(filter?: { status?: TaskStatus; category?: string }) {
     try {
-      // 1. Tenta buscar direto do Google Tasks
-      const gRes = await googleService.listGoogleTasks();
-      if (gRes.connected && Array.isArray(gRes.tasks)) {
-        let tasks = gRes.tasks;
-        if (filter?.status) {
-          tasks = tasks.filter((t) => t.status === filter.status);
-        }
-        if (filter?.category && filter.category !== 'ALL') {
-          tasks = tasks.filter((t) => t.category === filter.category);
-        }
-        return tasks;
+      const count = await prisma.task.count();
+      // Se a tabela estiver vazia, tenta uma sincronização inicial imediata
+      if (count === 0) {
+        await this.syncGoogleTasksToDatabase().catch(() => {});
       }
+
+      const where: any = {};
+      if (filter?.status) {
+        where.status = filter.status;
+      }
+      if (filter?.category && filter.category !== 'ALL') {
+        where.category = filter.category;
+      }
+
+      const tasks = await prisma.task.findMany({
+        where,
+        orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
+      });
+
+      return tasks.map((t) => ({
+        id: t.id,
+        googleTaskId: t.googleTaskId || t.id,
+        title: t.title,
+        description: t.description,
+        dueDate: t.dueDate,
+        status: t.status,
+        priority: t.priority,
+        category: t.category || 'Google Tasks',
+        isGoogleTask: t.isGoogleTask,
+        completedAt: t.completedAt,
+        updatedAt: t.updatedAt,
+      }));
     } catch (err: any) {
-      loggerService.error('system', `Aviso: Falha ao buscar Google Tasks direto da API: ${err.message}`);
+      loggerService.error('system', `Erro ao listar tarefas do banco de dados: ${err.message}`);
+      return [];
     }
-
-    // 2. Fallback caso a conta Google não esteja conectada ou dê timeout
-    const where: any = {};
-    if (filter?.status) where.status = filter.status;
-    if (filter?.category) where.category = filter.category;
-
-    const localTasks = await prisma.task.findMany({
-      where,
-      orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-    });
-
-    return localTasks.map((t) => ({
-      id: t.id,
-      googleTaskId: t.id,
-      title: t.title,
-      description: t.description,
-      dueDate: t.dueDate,
-      status: t.status,
-      priority: t.priority,
-      category: t.category || 'Google Tasks',
-      updatedAt: t.updatedAt,
-      isGoogleTask: false,
-    }));
   }
 
   /**
-   * Busca uma tarefa por ID
+   * Busca uma tarefa por ID (ou por googleTaskId)
    */
   async getTaskById(id: string) {
-    const all = await this.getAllTasks();
-    const found = all.find((t) => t.id === id || (t as any).googleTaskId === id);
-    if (found) return found;
-    return prisma.task.findUnique({ where: { id } });
+    const task = await prisma.task.findFirst({
+      where: {
+        OR: [{ id }, { googleTaskId: id }],
+      },
+    });
+
+    if (task) {
+      return {
+        id: task.id,
+        googleTaskId: task.googleTaskId || task.id,
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        status: task.status,
+        priority: task.priority,
+        category: task.category || 'Google Tasks',
+        isGoogleTask: task.isGoogleTask,
+        completedAt: task.completedAt,
+        updatedAt: task.updatedAt,
+      };
+    }
+    return null;
   }
 
   /**
-   * Cria uma tarefa diretamente no Google Tasks
+   * Cria uma tarefa salvando no MariaDB e enviando para o Google Tasks
    */
   async createTask(data: CreateTaskDTO) {
-    // 1. Tenta criar no Google Tasks
+    // 1. Cria primeiro no banco MariaDB local
+    const local = await prisma.task.create({
+      data: {
+        title: data.title,
+        description: data.description || null,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        priority: data.priority || TaskPriority.MEDIUM,
+        category: data.category || 'Google Tasks',
+        status: TaskStatus.PENDING,
+        isGoogleTask: true,
+      },
+    });
+
+    // 2. Tenta sincronizar com o Google Tasks
     try {
       const gRes = await googleService.createGoogleTask({
         title: data.title,
@@ -88,88 +187,84 @@ export class TaskService {
         dueDate: data.dueDate,
       });
 
-      if (gRes.success && gRes.task) {
-        loggerService.system(`✅ Tarefa criada no Google Tasks: "${data.title}" (ID: ${gRes.task.id})`);
-        return gRes.task;
+      if (gRes.success && gRes.task?.id) {
+        await prisma.task.update({
+          where: { id: local.id },
+          data: { googleTaskId: gRes.task.id },
+        });
+        loggerService.system(`✅ Tarefa criada no Google Tasks e salva no MariaDB: "${data.title}" (ID: ${gRes.task.id})`);
+        return { ...local, googleTaskId: gRes.task.id };
       }
     } catch (err: any) {
-      loggerService.error('system', `Erro ao criar no Google Tasks: ${err.message}`);
+      loggerService.error('system', `Aviso: Salvo no banco MariaDB, mas falhou ao enviar para Google Tasks: ${err.message}`);
     }
 
-    // 2. Fallback para banco local se Google não estiver disponível
-    const local = await prisma.task.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        priority: data.priority || TaskPriority.MEDIUM,
-        category: data.category || 'Google Tasks',
-        status: TaskStatus.PENDING,
-      },
-    });
-
-    return {
-      id: local.id,
-      googleTaskId: local.id,
-      title: local.title,
-      description: local.description,
-      dueDate: local.dueDate,
-      status: local.status,
-      priority: local.priority,
-      category: local.category,
-      updatedAt: local.updatedAt,
-      isGoogleTask: false,
-    };
+    return local;
   }
 
   /**
-   * Atualiza ou marca como concluída no Google Tasks
+   * Atualiza ou marca como concluída no MariaDB e no Google Tasks
    */
   async updateTask(id: string, data: UpdateTaskDTO) {
+    const existing = await prisma.task.findFirst({
+      where: {
+        OR: [{ id }, { googleTaskId: id }],
+      },
+    });
+
+    if (!existing) {
+      throw new Error(`Tarefa "${id}" não encontrada no banco de dados.`);
+    }
+
+    const updated = await prisma.task.update({
+      where: { id: existing.id },
+      data: {
+        ...data,
+        dueDate: data.dueDate !== undefined ? (data.dueDate ? new Date(data.dueDate) : null) : undefined,
+        completedAt: data.status === TaskStatus.COMPLETED ? new Date() : data.status === TaskStatus.PENDING ? null : undefined,
+      },
+    });
+
+    // Sincroniza alteração no Google Tasks
+    const googleId = existing.googleTaskId || existing.id;
     try {
-      const gRes = await googleService.updateGoogleTask(id, {
+      await googleService.updateGoogleTask(googleId, {
         title: data.title,
         description: data.description,
         dueDate: data.dueDate,
         status: data.status,
       });
-
-      if (gRes.success && gRes.task) {
-        loggerService.system(`🔄 Tarefa atualizada no Google Tasks: "${gRes.task.title}" (${data.status || 'atualizada'})`);
-        return gRes.task;
-      }
+      loggerService.system(`🔄 Tarefa atualizada no MariaDB e no Google Tasks: "${updated.title}"`);
     } catch (err: any) {
-      loggerService.error('system', `Erro ao atualizar no Google Tasks: ${err.message}`);
+      loggerService.error('system', `Aviso: Atualizada no MariaDB, mas falhou sincronização Google Tasks: ${err.message}`);
     }
 
-    // Fallback local
-    return prisma.task.update({
-      where: { id },
-      data: {
-        ...data,
-        dueDate: data.dueDate !== undefined ? (data.dueDate ? new Date(data.dueDate) : null) : undefined,
-      },
-    });
+    return updated;
   }
 
   /**
-   * Deleta do Google Tasks
+   * Deleta do MariaDB e do Google Tasks
    */
   async deleteTask(id: string) {
-    try {
-      const gRes = await googleService.deleteGoogleTask(id);
-      if (gRes.success) {
-        loggerService.system(`🗑️ Tarefa removida do Google Tasks: ${id}`);
-        return { success: true };
-      }
-    } catch (err: any) {
-      loggerService.error('system', `Erro ao deletar do Google Tasks: ${err.message}`);
+    const existing = await prisma.task.findFirst({
+      where: {
+        OR: [{ id }, { googleTaskId: id }],
+      },
+    });
+
+    const googleId = existing?.googleTaskId || id;
+
+    if (existing) {
+      try {
+        await prisma.task.delete({ where: { id: existing.id } });
+      } catch {}
     }
 
     try {
-      await prisma.task.delete({ where: { id } });
-    } catch {
-      // ignore
+      await googleService.deleteGoogleTask(googleId);
+      loggerService.system(`🗑️ Tarefa removida do MariaDB e do Google Tasks: ${id}`);
+    } catch (err: any) {
+      loggerService.error('system', `Aviso: Erro ao remover do Google Tasks: ${err.message}`);
     }
 
     return { success: true };
@@ -177,4 +272,3 @@ export class TaskService {
 }
 
 export const taskService = new TaskService();
-
