@@ -5,64 +5,9 @@ import { whatsappService } from '../services/whatsapp.service.js';
 import { ChatService } from '../services/chat.service.js';
 import { transcriptionService } from '../services/transcription.service.js';
 import { loggerService } from '../services/logger.service.js';
+import { contactService, PREDEFINED_ROLES, getPhoneVariants } from '../services/contact.service.js';
 
 const chatService = new ChatService();
-
-/**
- * Normaliza um número de telefone gerando variações (com e sem o 9º dígito para telefones BR)
- */
-function getPhoneVariants(phoneOrJid: string): string[] {
-  if (!phoneOrJid) return [];
-  const clean = phoneOrJid.split('@')[0].replace(/\D/g, '');
-  if (!clean) return [];
-
-  const variants = new Set<string>();
-  variants.add(clean);
-
-  // Formato brasileiro com DDI 55: Ex: 55 + DDD(2) + 9 dígitos (13 dígitos) vs 12 dígitos
-  if (clean.startsWith('55') && clean.length === 13) {
-    const ddd = clean.slice(2, 4);
-    const ninth = clean[4];
-    if (ninth === '9') {
-      variants.add(`55${ddd}${clean.slice(5)}`);
-    }
-  } else if (clean.startsWith('55') && clean.length === 12) {
-    const ddd = clean.slice(2, 4);
-    variants.add(`55${ddd}9${clean.slice(4)}`);
-  }
-
-  // Se não tiver DDI 55
-  if (!clean.startsWith('55')) {
-    variants.add(`55${clean}`);
-    if (clean.length === 11 && clean[2] === '9') {
-      variants.add(`55${clean.slice(0, 2)}${clean.slice(3)}`);
-    } else if (clean.length === 10) {
-      variants.add(`55${clean.slice(0, 2)}9${clean.slice(2)}`);
-    }
-  }
-
-  return Array.from(variants);
-}
-
-/**
- * Verifica se um remetente está na lista de números autorizados
- */
-function isSenderAuthorized(senderJidOrNumber: string): boolean {
-  const allowedRaw = process.env.WHATSAPP_ALLOWED_NUMBERS || '5541995852423,554195852423,+5541995852423';
-  const allowedList = allowedRaw
-    .split(',')
-    .map((n) => n.trim())
-    .filter(Boolean);
-
-  const senderVariants = getPhoneVariants(senderJidOrNumber);
-
-  for (const allowed of allowedList) {
-    const allowedVariants = getPhoneVariants(allowed);
-    const isMatch = senderVariants.some((sv) => allowedVariants.includes(sv));
-    if (isMatch) return true;
-  }
-  return false;
-}
 
 export async function whatsappRoutes(app: FastifyInstance) {
   /**
@@ -168,24 +113,28 @@ export async function whatsappRoutes(app: FastifyInstance) {
         // Identifica o remetente real (direto ou membro do grupo)
         const senderJid = isGroup ? (key.participant || data.participant || data.key?.participantJid || '') : remoteJid;
 
-        // REGRA DE AUTORIZAÇÃO: Apenas mensagens do número configurado (ex: +5541995852423)
-        if (!isSenderAuthorized(senderJid)) {
-          loggerService.whatsapp(`🚫 Mensagem de ${senderJid || remoteJid} ignorada (número não autorizado).`, {
+        // REGRA DE AUTORIZAÇÃO DINÂMICA: Verifica no banco de dados e cargos cadastrados
+        const authContact = await contactService.findAuthorizedContact(senderJid || remoteJid);
+        if (!authContact) {
+          loggerService.whatsapp(`🚫 Mensagem de ${senderJid || remoteJid} ignorada (número não autorizado no Business OS).`, {
             remoteJid,
             senderJid,
             pushName: data.pushName,
-            allowedNumbers: process.env.WHATSAPP_ALLOWED_NUMBERS || '5541995852423',
           });
           return;
         }
 
-        const pushName = data.pushName || (key.fromMe ? 'Administrador' : 'Maychel');
+        const roleMeta = PREDEFINED_ROLES.find((r) => r.id === authContact.role);
+        const roleLabel = roleMeta ? roleMeta.name : authContact.role;
+        const contactName = authContact.name || data.pushName || 'Usuário';
+        const pushName = contactName;
 
-        loggerService.whatsapp(`📩 Mensagem autorizada recebida de [${pushName}] (${senderJid})`, {
+        loggerService.whatsapp(`📩 Mensagem autorizada recebida de [${contactName}] (${authContact.phone} - Cargo: ${roleLabel})`, {
           remoteJid,
           senderJid,
           isGroup,
-          pushName,
+          contactName,
+          role: authContact.role,
           fromMe: key.fromMe,
           messageId: key.id,
         });
@@ -301,13 +250,15 @@ export async function whatsappRoutes(app: FastifyInstance) {
           return;
         }
 
-        loggerService.agent(`🤖 Processando mensagem com a Victoria: "${text || '(Foto sem legenda)'}" (de ${pushName})`);
+        loggerService.agent(`🤖 Processando mensagem com a Victoria: "${text || '(Foto sem legenda)'}" (de ${contactName} - ${roleLabel})`);
 
-        let promptWithSender = `[${pushName}]: ${text}`;
+        const briefingInfo = authContact.briefing ? ` | Briefing/Quem é: "${authContact.briefing}"` : (authContact.notes ? ` | Nota: "${authContact.notes}"` : '');
+        const senderTag = `${contactName} (Cargo: ${roleLabel}${briefingInfo})`;
+        let promptWithSender = `[${senderTag}]: ${text}`;
         if (isAudio) {
-          promptWithSender = `[${pushName} (Áudio de Voz Transcrito)]: ${text}`;
+          promptWithSender = `[${senderTag} (Áudio de Voz Transcrito)]: ${text}`;
         } else if (isImage) {
-          promptWithSender = `[${pushName} enviou uma Foto/Imagem no WhatsApp] (Legenda/Texto: "${text || 'Sem legenda'}"). URL da imagem: ${imageUrl || 'N/A'}`;
+          promptWithSender = `[${senderTag} enviou uma Foto/Imagem no WhatsApp] (Legenda/Texto: "${text || 'Sem legenda'}"). URL da imagem: ${imageUrl || 'N/A'}`;
         }
 
         const channelType = isGroup ? 'whatsapp_group' : 'whatsapp';

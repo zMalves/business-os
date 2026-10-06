@@ -20,9 +20,11 @@ import { cronRoutes } from './routes/cron.routes.js';
 import { skillRoutes } from './routes/skill.routes.js';
 import { metaRoutes } from './routes/meta.routes.js';
 import { ecommerceRoutes } from './routes/ecommerce.routes.js';
+import { contactRoutes } from './routes/contact.routes.js';
 import { loggerService } from './services/logger.service.js';
 import { cronService } from './services/cron.service.js';
 import { authService } from './services/auth.service.js';
+import { contactService } from './services/contact.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,7 +134,7 @@ async function main() {
   });
 
   // 4. Centralização e Sanitização de Erros Internos (Ponto 12)
-  app.setErrorHandler((error, req, reply) => {
+  app.setErrorHandler((error: any, req, reply) => {
     loggerService.system(`[Erro Não Tratado] ${req.method} ${req.url}: ${error.message}`, {
       statusCode: error.statusCode,
       stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
@@ -213,6 +215,7 @@ async function main() {
   await app.register(skillRoutes, { prefix: '/api' });
   await app.register(metaRoutes, { prefix: '/api' });
   await app.register(ecommerceRoutes, { prefix: '/api' });
+  await app.register(contactRoutes, { prefix: '/api' });
 
   // Servidor de arquivos estáticos nativo com proteção de autenticação no Painel
   const candidatePaths = [
@@ -305,6 +308,8 @@ async function main() {
 
     // Garante que o usuário administrador inicial exista no banco
     await authService.ensureDefaultUser();
+    // Garante que os contatos autorizados iniciais existam no banco
+    await contactService.ensureSeedContacts();
 
     // Inicializa motor de Crons e automações periódicas
     setTimeout(async () => {

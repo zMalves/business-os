@@ -376,6 +376,7 @@
       <section class="tab-panel" id="tab-settings">
         <!-- Quick Jump Section Pills -->
         <div class="settings-nav-pills" style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; position: sticky; top: -28px; z-index: 5; background: var(--color-sand); padding: 8px 0; border-bottom: 1px solid var(--color-sand-border);">
+          <a href="#settings-contacts" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Contatos & Permissões</a>
           <a href="#settings-costs" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-coins"></i> Custos e Usos</a>
           <a href="#settings-memories" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-brain"></i> Memória</a>
           <a href="#settings-logs" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-terminal"></i> Terminal de Logs</a>
@@ -383,8 +384,75 @@
           <a href="#settings-system" class="btn btn-secondary btn-xs" style="text-decoration: none;"><i class="fa-solid fa-sliders"></i> Sistema & Preferências</a>
         </div>
 
+        <!-- SEÇÃO: CONTATOS & PERMISSÕES DO WHATSAPP -->
+        <div class="settings-section" id="settings-contacts" style="margin-bottom: 36px;">
+          <div class="settings-section-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Contatos & Permissões da Victoria
+              </h2>
+              <p style="font-size: 0.85rem; color: var(--color-slate); margin: 4px 0 0 0;">
+                Defina dinamicamente quem a Victoria pode responder e o nível de autoridade de cada pessoa (Administrador, Gestor, Equipe, etc.).
+              </p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-new-contact" onclick="openCreateContactModal()">
+              <i class="fa-solid fa-user-plus"></i> Autorizar Novo Contato
+            </button>
+          </div>
+
+          <!-- Barra de Busca e Filtros de Contato -->
+          <div class="contacts-toolbar-card" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm); padding: 10px 14px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 240px; max-width: 400px;">
+              <div class="logs-search" style="width: 100%;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="contacts-search-input" placeholder="Buscar por nome, telefone ou notas..." oninput="filterContactsList()" />
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <select id="contacts-role-filter" class="logs-select" onchange="filterContactsList()" style="font-size: 0.82rem; padding: 6px 10px;">
+                <option value="ALL">⚡ Todos os Cargos</option>
+                <option value="ADMIN">👑 Administrador</option>
+                <option value="MANAGER">💼 Gestor / Gerente</option>
+                <option value="OPERATOR">🛠️ Operacional / Equipe</option>
+                <option value="VIP_CLIENT">⭐ Cliente VIP</option>
+                <option value="VIEWER">👁️ Visualizador</option>
+              </select>
+
+              <div id="contacts-count-badge" class="badge badge-cyprus" style="font-size: 0.78rem; padding: 5px 10px;">
+                0 contatos autorizados
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid / Lista de Contatos -->
+          <div class="contacts-grid-wrapper" id="contacts-grid-wrapper">
+            <div class="contacts-table-container" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow-x: auto;">
+              <table class="finops-table" id="contacts-table">
+                <thead>
+                  <tr>
+                    <th>Contato</th>
+                    <th>Telefone (WhatsApp)</th>
+                    <th>Cargo & Nível</th>
+                    <th>Status</th>
+                    <th>Notas / Observações</th>
+                    <th style="text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="contacts-tbody">
+                  <tr>
+                    <td colspan="6" style="padding: 32px; text-align: center; color: var(--text-dim);">
+                      <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 8px;"></i> Carregando contatos autorizados...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- SEÇÃO 1: CUSTOS E USOS -->
-        <div class="settings-section" id="settings-costs" style="margin-bottom: 36px;">
+        <div class="settings-section" id="settings-costs" style="margin-bottom: 36px; padding-top: 28px; border-top: 1px solid var(--color-sand-border);">
           <div class="settings-section-header" style="margin-bottom: 18px;">
             <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--color-cyprus); margin: 0; display: flex; align-items: center; gap: 8px;">
               <i class="fa-solid fa-coins" style="color: var(--color-mint);"></i> Custos e Usos de IA
@@ -864,6 +932,81 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('modal-task')">Cancelar</button>
           <button type="submit" class="btn btn-primary" id="btn-save-task"><i class="fa-brands fa-google"></i> Salvar no Google Tasks</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Cadastrar / Editar Contato Autorizado -->
+  <div class="modal-backdrop" id="modal-contact">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(37, 211, 102, 0.15); color: #25D366; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-brands fa-whatsapp"></i>
+          </div>
+          <div>
+            <h3 id="modal-contact-title" style="margin: 0; font-size: 1.15rem;">Autorizar Contato na Victoria</h3>
+            <small style="color: var(--text-dim);">Defina a autoridade e permissões de atendimento</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-contact')">&times;</button>
+      </div>
+      <form id="form-contact" onsubmit="handleSaveContact(event)">
+        <input type="hidden" id="contact-id" value="">
+        
+        <div class="form-group">
+          <label>Nome / Identificação do Contato *</label>
+          <input type="text" id="contact-name" placeholder="Ex: Carlos Eduardo (Gestor de Tráfego)" required>
+        </div>
+
+        <div class="form-group">
+          <label>Número do WhatsApp *</label>
+          <input type="text" id="contact-phone" placeholder="Ex: 5541995852423 ou 41 99585-2423" required>
+          <small style="color: var(--text-dim); font-size: 0.75rem;">Aceita qualquer formato com ou sem DDI 55 e 9º dígito.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Cargo & Nível de Permissão *</label>
+          <select id="contact-role" onchange="updateContactRoleDescription(this.value)" required>
+            <option value="ADMIN">👑 Administrador (Acesso Total / Dono)</option>
+            <option value="MANAGER">💼 Gestor / Gerente (Vendas, Operações, Briefing)</option>
+            <option value="OPERATOR">🛠️ Operacional / Equipe (Tarefas e Consultas)</option>
+            <option value="VIP_CLIENT">⭐ Cliente VIP (Atendimento Executivo & Status)</option>
+            <option value="VIEWER">👁️ Visualizador (Apenas Dúvidas Gerais)</option>
+          </select>
+          <div id="contact-role-description" style="margin-top: 6px; padding: 8px 12px; background: var(--color-sand-light); border-left: 3px solid var(--color-cyprus); border-radius: 4px; font-size: 0.78rem; color: var(--color-slate); line-height: 1.4;">
+            Acesso total irrestrito: finanças, métricas, tarefas, skills, comandos do sistema e controle de acessos.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Briefing / Perfil da Pessoa para a IA (O que a Victoria deve saber sobre ela)</label>
+          <textarea id="contact-briefing" rows="3" placeholder="Ex: Gestor de tráfego das marcas KlimaParts e ArmorCar. Trabalha diretamente com campanhas de Meta Ads e relatórios semanais. Converse com ele de forma amigável, direta e alinhada com as metas de marketing."></textarea>
+          <small style="color: var(--text-dim); font-size: 0.74rem; display: block; margin-top: 4px;">
+            <i class="fa-solid fa-lightbulb" style="color: var(--color-amber);"></i> A Victoria usa esse briefing para saber quem a pessoa é, como tratá-la e manter um tom natural e personalizado.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Observações / Notas Rápidas (opcional)</label>
+          <input type="text" id="contact-notes" placeholder="Ex: Sócio, responde pelo financeiro, etc.">
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--color-sand-light); border-radius: var(--radius-sm); border: 1px solid var(--color-sand-border); margin-top: 10px;">
+          <div>
+            <strong style="font-size: 0.88rem; color: var(--color-ink); display: block;">Status de Autorização</strong>
+            <small style="font-size: 0.75rem; color: var(--text-dim);">Se desativado, a Victoria ignora as mensagens deste número.</small>
+          </div>
+          <label class="custom-switch">
+            <input type="checkbox" id="contact-is-active" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="modal-footer" style="margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-contact')">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-contact"><i class="fa-solid fa-check"></i> Salvar Contato</button>
         </div>
       </form>
     </div>

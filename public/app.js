@@ -97,12 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
   setupAiUsage();
   setupMetaBusiness();
   setupLogs();
+  setupContacts();
   fetchHealth();
   fetchDashboardOverview();
   fetchEcommerceData();
   fetchTasks();
   fetchCronJobs();
   fetchMemories();
+  fetchContacts();
   fetchWhatsAppStatus();
   fetchGoogleStatus();
   fetchAiUsageStats();
@@ -116,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchTasks();
     fetchCronJobs();
     fetchMemories();
+    fetchContacts();
     fetchWhatsAppStatus();
     fetchGoogleStatus();
     fetchAiUsageStats();
@@ -163,8 +166,9 @@ function setupNavigation() {
 function switchTab(tab) {
   let targetScrollSection = null;
   // Aliases for legacy section references
-  if (['ai-hub', 'memories', 'logs', 'system', 'webhooks', 'settings'].includes(tab)) {
-    if (tab === 'ai-hub') targetScrollSection = 'settings-costs';
+  if (['ai-hub', 'contacts', 'memories', 'logs', 'system', 'webhooks', 'settings'].includes(tab)) {
+    if (tab === 'contacts') targetScrollSection = 'settings-contacts';
+    else if (tab === 'ai-hub') targetScrollSection = 'settings-costs';
     else if (tab === 'memories') targetScrollSection = 'settings-memories';
     else if (tab === 'logs') targetScrollSection = 'settings-logs';
     else if (tab === 'webhooks') targetScrollSection = 'settings-webhooks';
@@ -3254,6 +3258,342 @@ async function handleCopilotSubmit(e) {
   container.scrollTop = container.scrollHeight;
 }
 window.handleCopilotSubmit = handleCopilotSubmit;
+
+/* ============================================================================
+   CONTACTS & PERMISSIONS MANAGEMENT (VICTORIA WHATSAPP)
+   ============================================================================ */
+let allContacts = [];
+
+const ROLE_DEFINITIONS = {
+  ADMIN: {
+    name: 'Administrador (Dono)',
+    badgeClass: 'role-ADMIN',
+    icon: 'fa-solid fa-crown',
+    desc: 'Acesso total irrestrito: finanças, métricas, tarefas, skills, comandos do sistema e controle de acessos.',
+  },
+  MANAGER: {
+    name: 'Gestor / Gerente',
+    badgeClass: 'role-MANAGER',
+    icon: 'fa-solid fa-briefcase',
+    desc: 'Acesso a relatórios de vendas, estoque, reuniões, criação de tarefas e briefing operacional.',
+  },
+  OPERATOR: {
+    name: 'Operacional / Equipe',
+    badgeClass: 'role-OPERATOR',
+    icon: 'fa-solid fa-screwdriver-wrench',
+    desc: 'Consultas sobre produtos, pedidos, procedimentos e agendamento de compromissos.',
+  },
+  VIP_CLIENT: {
+    name: 'Cliente VIP',
+    badgeClass: 'role-VIP_CLIENT',
+    icon: 'fa-solid fa-star',
+    desc: 'Atendimento executivo exclusivo, status de pedidos e suporte prioritário personalizado.',
+  },
+  VIEWER: {
+    name: 'Visualizador (Consulta)',
+    badgeClass: 'role-VIEWER',
+    icon: 'fa-solid fa-eye',
+    desc: 'Apenas tira dúvidas informativas gerais com a IA sem executar ações operacionais.',
+  },
+};
+
+function setupContacts() {
+  const roleSelect = document.getElementById('contact-role');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', (e) => {
+      updateContactRoleDescription(e.target.value);
+    });
+  }
+}
+
+function updateContactRoleDescription(role) {
+  const descEl = document.getElementById('contact-role-description');
+  if (descEl && ROLE_DEFINITIONS[role]) {
+    descEl.textContent = ROLE_DEFINITIONS[role].desc;
+  }
+}
+window.updateContactRoleDescription = updateContactRoleDescription;
+
+function formatPhoneDisplay(phone) {
+  if (!phone) return '-';
+  const clean = phone.replace(/\D/g, '');
+  if (clean.length === 13 && clean.startsWith('55')) {
+    return `+55 (${clean.slice(2, 4)}) ${clean.slice(4, 9)}-${clean.slice(9)}`;
+  } else if (clean.length === 12 && clean.startsWith('55')) {
+    return `+55 (${clean.slice(2, 4)}) ${clean.slice(4, 8)}-${clean.slice(8)}`;
+  } else if (clean.length === 11) {
+    return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+  } else if (clean.length === 10) {
+    return `(${clean.slice(0, 2)}) ${clean.slice(2, 6)}-${clean.slice(6)}`;
+  }
+  return phone;
+}
+
+async function fetchContacts() {
+  const tbody = document.getElementById('contacts-tbody');
+  if (!tbody) return;
+
+  try {
+    const res = await fetch('/api/contacts');
+    const data = await res.json();
+    if (data.success && Array.isArray(data.data)) {
+      allContacts = data.data;
+      renderContacts(allContacts);
+    } else {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="padding: 24px; text-align: center; color: var(--color-coral);">
+            Erro ao carregar contatos: ${data.error || 'Falha desconhecida'}
+          </td>
+        </tr>
+      `;
+    }
+  } catch (err) {
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="padding: 24px; text-align: center; color: var(--color-coral);">
+            Falha na conexão com a API de contatos.
+          </td>
+        </tr>
+      `;
+    }
+  }
+}
+window.fetchContacts = fetchContacts;
+
+function renderContacts(list) {
+  const tbody = document.getElementById('contacts-tbody');
+  const countBadge = document.getElementById('contacts-count-badge');
+  if (!tbody) return;
+
+  if (countBadge) {
+    const activeCount = list.filter(c => c.isActive).length;
+    countBadge.textContent = `${list.length} cadastrado${list.length !== 1 ? 's' : ''} (${activeCount} ativo${activeCount !== 1 ? 's' : ''})`;
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="padding: 32px; text-align: center; color: var(--text-dim);">
+          <div style="font-size: 1rem; margin-bottom: 6px; font-weight: 500;">Nenhum contato autorizado encontrado.</div>
+          <button class="btn btn-primary btn-sm" onclick="openCreateContactModal()" style="margin-top: 8px;">
+            <i class="fa-solid fa-user-plus"></i> Autorizar Primeiro Contato
+          </button>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.map(c => {
+    const roleInfo = ROLE_DEFINITIONS[c.role] || {
+      name: c.role,
+      badgeClass: 'role-VIEWER',
+      icon: 'fa-solid fa-user',
+      desc: ''
+    };
+
+    const initials = (c.name || 'U')
+      .split(' ')
+      .map(w => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
+    const formattedPhone = formatPhoneDisplay(c.phone);
+    const waLink = `https://wa.me/${c.phone.replace(/\D/g, '')}`;
+
+    return `
+      <tr style="opacity: ${c.isActive ? '1' : '0.65'}; transition: opacity 0.2s;">
+        <td>
+          <div class="contact-user-cell">
+            <div class="contact-avatar ${roleInfo.badgeClass}">${initials}</div>
+            <div>
+              <div class="contact-info-title">${escapeHtml(c.name)}</div>
+              <small style="color: var(--text-dim); font-size: 0.74rem;">Cadastrado em ${new Date(c.createdAt).toLocaleDateString('pt-BR')}</small>
+            </div>
+          </div>
+        </td>
+        <td>
+          <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="contact-phone-link" title="Abrir conversa no WhatsApp">
+            <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> ${formattedPhone}
+          </a>
+        </td>
+        <td>
+          <span class="badge-role ${roleInfo.badgeClass}" title="${escapeHtml(roleInfo.desc)}">
+            <i class="${roleInfo.icon}"></i> ${escapeHtml(roleInfo.name)}
+          </span>
+        </td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label class="custom-switch" style="transform: scale(0.85); transform-origin: left center;" title="${c.isActive ? 'Clique para Bloquear/Desativar' : 'Clique para Ativar'}">
+              <input type="checkbox" ${c.isActive ? 'checked' : ''} onchange="toggleContactStatus('${c.id}')">
+              <span class="slider"></span>
+            </label>
+            <span class="${c.isActive ? 'contact-status-active' : 'contact-status-blocked'}">
+              <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> ${c.isActive ? 'Autorizado' : 'Bloqueado'}
+            </span>
+          </div>
+        </td>
+        <td>
+          <div style="max-width: 260px; line-height: 1.35;">
+            ${c.briefing ? `<div style="font-size: 0.8rem; color: var(--color-ink); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 2px;" title="Briefing para IA: ${escapeHtml(c.briefing)}"><i class="fa-solid fa-brain" style="color: var(--color-amber); font-size: 0.72rem; margin-right: 4px;"></i>${escapeHtml(c.briefing)}</div>` : ''}
+            <div style="font-size: 0.76rem; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(c.notes || '-')}">${escapeHtml(c.notes || (c.briefing ? '' : 'Sem notas'))}</div>
+          </div>
+        </td>
+        <td style="text-align: right;">
+          <div class="contact-actions-cell">
+            <button class="btn btn-secondary btn-xs" onclick="openEditContactModal('${c.id}')" title="Editar contato">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button class="btn btn-secondary btn-xs" onclick="deleteContact('${c.id}', '${escapeHtml(c.name)}')" title="Remover contato" style="color: var(--color-coral);">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterContactsList() {
+  const searchInput = document.getElementById('contacts-search-input');
+  const roleSelect = document.getElementById('contacts-role-filter');
+
+  const query = (searchInput?.value || '').trim().toLowerCase();
+  const selectedRole = roleSelect?.value || 'ALL';
+
+  const filtered = allContacts.filter(c => {
+    const matchQuery = !query ||
+      c.name.toLowerCase().includes(query) ||
+      c.phone.includes(query) ||
+      (c.briefing && c.briefing.toLowerCase().includes(query)) ||
+      (c.notes && c.notes.toLowerCase().includes(query));
+
+    const matchRole = selectedRole === 'ALL' || c.role === selectedRole;
+    return matchQuery && matchRole;
+  });
+
+  renderContacts(filtered);
+}
+window.filterContactsList = filterContactsList;
+
+function openCreateContactModal() {
+  document.getElementById('modal-contact-title').textContent = 'Autorizar Contato na Victoria';
+  document.getElementById('contact-id').value = '';
+  document.getElementById('contact-name').value = '';
+  document.getElementById('contact-phone').value = '';
+  document.getElementById('contact-role').value = 'ADMIN';
+  document.getElementById('contact-briefing').value = '';
+  document.getElementById('contact-notes').value = '';
+  document.getElementById('contact-is-active').checked = true;
+  updateContactRoleDescription('ADMIN');
+
+  openModal('modal-contact');
+}
+window.openCreateContactModal = openCreateContactModal;
+
+function openEditContactModal(id) {
+  const contact = allContacts.find(c => c.id === id);
+  if (!contact) return;
+
+  document.getElementById('modal-contact-title').textContent = 'Editar Contato Autorizado';
+  document.getElementById('contact-id').value = contact.id;
+  document.getElementById('contact-name').value = contact.name;
+  document.getElementById('contact-phone').value = contact.phone;
+  document.getElementById('contact-role').value = contact.role;
+  document.getElementById('contact-briefing').value = contact.briefing || '';
+  document.getElementById('contact-notes').value = contact.notes || '';
+  document.getElementById('contact-is-active').checked = contact.isActive;
+  updateContactRoleDescription(contact.role);
+
+  openModal('modal-contact');
+}
+window.openEditContactModal = openEditContactModal;
+
+async function handleSaveContact(event) {
+  if (event && event.preventDefault) event.preventDefault();
+
+  const id = document.getElementById('contact-id').value;
+  const name = document.getElementById('contact-name').value.trim();
+  const phone = document.getElementById('contact-phone').value.trim();
+  const role = document.getElementById('contact-role').value;
+  const briefing = document.getElementById('contact-briefing').value.trim();
+  const notes = document.getElementById('contact-notes').value.trim();
+  const isActive = document.getElementById('contact-is-active').checked;
+
+  if (!name || !phone) {
+    showToast('Preencha o Nome e o Número de WhatsApp.', 'error');
+    return;
+  }
+
+  const btnSubmit = document.getElementById('btn-submit-contact');
+  if (btnSubmit) btnSubmit.disabled = true;
+
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/contacts/${id}` : '/api/contacts';
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, role, briefing, notes, isActive })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast(id ? 'Contato atualizado com sucesso!' : 'Novo contato autorizado com sucesso!', 'success');
+      closeModal('modal-contact');
+      await fetchContacts();
+    } else {
+      showToast(`Erro ao salvar: ${data.error || 'Falha desconhecida'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Erro de conexão: ${err.message}`, 'error');
+  } finally {
+    if (btnSubmit) btnSubmit.disabled = false;
+  }
+}
+window.handleSaveContact = handleSaveContact;
+
+async function toggleContactStatus(id) {
+  try {
+    const res = await fetch(`/api/contacts/${id}/toggle`, { method: 'PATCH' });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Status de ${data.data.name} alterado com sucesso!`, 'success');
+      await fetchContacts();
+    } else {
+      showToast(`Erro: ${data.error}`, 'error');
+      await fetchContacts();
+    }
+  } catch (err) {
+    showToast(`Erro de conexão: ${err.message}`, 'error');
+    await fetchContacts();
+  }
+}
+window.toggleContactStatus = toggleContactStatus;
+
+async function deleteContact(id, name) {
+  if (!confirm(`Deseja realmente revogar a autorização e remover "${name}"?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Contato "${name}" removido com sucesso.`, 'success');
+      await fetchContacts();
+    } else {
+      showToast(`Erro ao remover: ${data.error}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Erro ao remover contato: ${err.message}`, 'error');
+  }
+}
+window.deleteContact = deleteContact;
 
 
 
