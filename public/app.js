@@ -3113,26 +3113,45 @@ async function fetchSkillsCatalog() {
     const res = await fetch('/api/skills');
     const data = await res.json();
     if (data.success && Array.isArray(data.skills) && data.skills.length > 0) {
-      grid.innerHTML = data.skills.map(s => `
+      grid.innerHTML = data.skills.map(s => {
+        const safeName = (s.displayName || s.name || 'Skill').replace(/'/g, "\\'");
+        const testRes = s.testResult;
+        return `
         <div class="bento-module-card" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">${s.displayName || s.name}</h4>
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-cyprus); margin: 0;">${escapeHtml(s.displayName || s.name)}</h4>
               <span class="badge ${s.isActive ? 'badge-mint' : 'badge-coral'}">${s.isActive ? 'Ativa' : 'Pausada'}</span>
             </div>
-            <p style="font-size: 0.82rem; color: var(--color-slate); line-height: 1.4; margin-bottom: 12px;">${s.description || 'Sem descrição.'}</p>
+            <p style="font-size: 0.82rem; color: var(--color-slate); line-height: 1.4; margin-bottom: 12px;">${escapeHtml(s.description || 'Sem descrição.')}</p>
             ${Array.isArray(s.triggerExamples) && s.triggerExamples.length > 0 ? `
               <div style="font-size: 0.74rem; color: var(--color-muted); margin-bottom: 8px;">
-                <strong>Gatilhos:</strong> ${s.triggerExamples.map(t => `<code>${t}</code>`).join(' ')}
+                <strong>Gatilhos:</strong> ${s.triggerExamples.map(t => `<code>${escapeHtml(t)}</code>`).join(' ')}
+              </div>
+            ` : ''}
+            ${testRes ? `
+              <div style="font-size: 0.72rem; color: var(--color-slate); background: var(--color-sand-light); border-radius: 4px; padding: 5px 8px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--color-sand-border);">
+                <span><i class="fa-solid fa-flask" style="color: var(--color-cyprus); margin-right: 4px;"></i> Último Dry-Run:</span>
+                <span class="badge ${testRes.success ? 'badge-mint' : 'badge-coral'}" style="font-size: 0.68rem; padding: 1px 6px;">
+                  ${testRes.success ? 'Sucesso' : 'Falha'} (${testRes.durationMs || 0}ms)
+                </span>
               </div>
             ` : ''}
           </div>
-          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--color-sand-border-soft); padding-top: 10px;">
-            <button class="btn btn-secondary btn-xs" onclick="runSkillDryRun('${s.id}')"><i class="fa-solid fa-play"></i> Simular (Dry-Run)</button>
-            <button class="btn btn-secondary btn-xs" onclick="toggleSkillActive('${s.id}')"><i class="fa-solid fa-power-off"></i> ${s.isActive ? 'Pausar' : 'Ativar'}</button>
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 14px; border-top: 1px solid var(--color-sand-border-soft); padding-top: 10px; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-xs" id="btn-dry-${s.id}" onclick="runSkillDryRun('${s.id}', '${safeName}')" title="Testar fluxo simulado sem efeitos colaterais">
+              <i class="fa-solid fa-flask"></i> Dry Run
+            </button>
+            <button class="btn btn-secondary btn-xs" id="btn-toggle-${s.id}" onclick="toggleSkillActive('${s.id}', ${s.isActive ? 'true' : 'false'}, '${safeName}')" title="${s.isActive ? 'Pausar habilidade' : 'Ativar habilidade'}">
+              <i class="fa-solid ${s.isActive ? 'fa-pause' : 'fa-play'}"></i> ${s.isActive ? 'Pausar' : 'Ativar'}
+            </button>
+            <button class="btn btn-secondary btn-xs" id="btn-del-${s.id}" style="color: var(--color-coral); border-color: rgba(224, 76, 56, 0.35);" onclick="deleteSkill('${s.id}', '${safeName}')" title="Excluir habilidade permanentemente">
+              <i class="fa-solid fa-trash-can"></i> Deletar
+            </button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     } else {
       grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--color-muted); font-size: 0.88rem; padding: 30px; text-align: center; background: var(--color-surface-pure); border: 1px solid var(--color-sand-border); border-radius: var(--radius-sm);"><i class="fa-solid fa-wand-magic-sparkles" style="font-size: 1.6rem; color: var(--color-cyprus); margin-bottom: 8px; display: block;"></i>Nenhuma Dynamic Skill criada ainda. Peça para a Victoria no chat: <em>"Aprenda a fazer um resumo das lojas..."</em></div>`;
     }
@@ -3141,6 +3160,196 @@ async function fetchSkillsCatalog() {
   }
 }
 window.fetchSkillsCatalog = fetchSkillsCatalog;
+
+async function runSkillDryRun(id, displayName) {
+  const btn = document.getElementById(`btn-dry-${id}`);
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Testando...';
+  }
+
+  try {
+    const res = await fetch(`/api/skills/${encodeURIComponent(id)}/dry-run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+
+    if (data.success && data.result) {
+      const r = data.result;
+      if (r.success) {
+        showToast(`Dry-run de "${displayName}" executado com sucesso (${r.durationMs}ms)!`, 'success');
+      } else {
+        showToast(`Dry-run de "${displayName}" identificou falhas no fluxo.`, 'warning');
+      }
+      openSkillDryRunModal(displayName, r);
+      fetchSkillsCatalog();
+    } else {
+      showToast(`Erro na simulação: ${data.error || 'Falha ao executar teste'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Erro de conexão no Dry-run: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  }
+}
+window.runSkillDryRun = runSkillDryRun;
+
+function openSkillDryRunModal(displayName, result) {
+  const titleEl = document.getElementById('modal-dry-run-title');
+  const subEl = document.getElementById('modal-dry-run-subtitle');
+  const bodyEl = document.getElementById('modal-dry-run-body');
+  const timeEl = document.getElementById('modal-dry-run-time');
+
+  if (titleEl) titleEl.textContent = `Dry-Run: ${displayName}`;
+  if (subEl) subEl.textContent = `Simulação isolada executada em ${result.durationMs || 0}ms`;
+  if (timeEl) timeEl.textContent = `Tempo: ${result.durationMs || 0}ms | ${new Date().toLocaleTimeString('pt-BR')}`;
+
+  if (bodyEl) {
+    const isSuccess = result.success !== false;
+    const logs = Array.isArray(result.logs) ? result.logs : [];
+    const stepsOutput = result.steps || {};
+
+    let html = `
+      <div style="background: ${isSuccess ? 'rgba(0, 70, 67, 0.08)' : 'rgba(224, 76, 56, 0.08)'}; border: 1px solid ${isSuccess ? 'var(--color-mint)' : 'var(--color-coral)'}; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+        <i class="fa-solid ${isSuccess ? 'fa-circle-check' : 'fa-triangle-exclamation'}" style="color: ${isSuccess ? 'var(--color-mint)' : 'var(--color-coral)'}; font-size: 1.25rem; margin-top: 2px;"></i>
+        <div>
+          <strong style="color: var(--color-ink); font-size: 0.9rem; display: block;">${isSuccess ? 'Simulação bem-sucedida!' : 'Simulação identificou falhas'}</strong>
+          <span style="font-size: 0.8rem; color: var(--color-slate); line-height: 1.4;">
+            ${isSuccess 
+              ? 'Todas as variáveis e etapas foram simuladas com êxito sem gerar efeitos colaterais reais no WhatsApp ou produção.' 
+              : `Ocorreu um erro durante a simulação: <code>${escapeHtml(result.error || 'Erro desconhecido')}</code>`}
+          </span>
+        </div>
+      </div>
+    `;
+
+    if (logs.length > 0) {
+      html += `
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--color-cyprus); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-list-check"></i> Etapas do Fluxo (${logs.length})
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+      `;
+
+      logs.forEach((step, idx) => {
+        const stepSuccess = step.success !== false;
+        html += `
+          <div style="background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: 6px; padding: 10px 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.82rem; font-weight: 600; color: var(--color-cyprus);">
+                #${idx + 1} ${escapeHtml(step.title || step.stepId)}
+                <small style="color: var(--color-muted); font-weight: 400;">(${step.type === 'tool_call' ? `Ferramenta: ${escapeHtml(step.toolName || '')}` : 'Formatação'})</small>
+              </span>
+              <span class="badge ${stepSuccess ? 'badge-mint' : 'badge-coral'}" style="font-size: 0.68rem; padding: 2px 6px;">
+                ${stepSuccess ? 'OK' : 'Falha'}
+              </span>
+            </div>
+            ${step.error ? `
+              <div style="color: var(--color-coral); font-size: 0.78rem; background: rgba(224, 76, 56, 0.1); padding: 6px 8px; border-radius: 4px; font-family: var(--font-mono); margin-top: 4px;">
+                ${escapeHtml(step.error)}
+              </div>
+            ` : ''}
+            ${step.output !== undefined ? `
+              <div style="margin-top: 6px;">
+                <span style="font-size: 0.72rem; color: var(--color-muted); font-weight: 600; text-transform: uppercase;">Saída Gerada:</span>
+                <pre style="background: var(--color-surface-pure); border: 1px solid var(--color-sand-border); border-radius: 4px; padding: 8px; font-size: 0.75rem; color: var(--color-ink); max-height: 180px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; margin-top: 2px;">${escapeHtml(typeof step.output === 'object' ? JSON.stringify(step.output, null, 2) : String(step.output))}</pre>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+    } else {
+      html += `
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--color-cyprus); margin-bottom: 8px;">Saídas do Contexto:</h4>
+        <pre style="background: var(--color-sand-light); border: 1px solid var(--color-sand-border); border-radius: 6px; padding: 12px; font-size: 0.76rem; max-height: 250px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;">${escapeHtml(JSON.stringify(stepsOutput, null, 2))}</pre>
+      `;
+    }
+
+    bodyEl.innerHTML = html;
+  }
+
+  openModal('modal-skill-dry-run');
+}
+window.openSkillDryRunModal = openSkillDryRunModal;
+
+async function toggleSkillActive(id, currentActive, displayName) {
+  const btn = document.getElementById(`btn-toggle-${id}`);
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+  }
+
+  try {
+    const res = await fetch(`/api/skills/${encodeURIComponent(id)}/toggle`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive: !currentActive }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(
+        currentActive 
+          ? `Habilidade "${displayName || 'Skill'}" pausada com sucesso.` 
+          : `Habilidade "${displayName || 'Skill'}" ativada com sucesso!`,
+        'success'
+      );
+      await fetchSkillsCatalog();
+    } else {
+      showToast(`Erro ao alterar status: ${data.error || 'Falha desconhecida'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Erro de conexão: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  }
+}
+window.toggleSkillActive = toggleSkillActive;
+
+async function deleteSkill(id, displayName) {
+  if (!confirm(`Deseja realmente excluir a habilidade "${displayName || 'esta skill'}"?\nEsta ação removerá o fluxo permanentemente.`)) {
+    return;
+  }
+
+  const btn = document.getElementById(`btn-del-${id}`);
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+  }
+
+  try {
+    const res = await fetch(`/api/skills/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Habilidade "${displayName || 'Skill'}" removida com sucesso.`, 'success');
+      await fetchSkillsCatalog();
+    } else {
+      showToast(`Erro ao excluir: ${data.error || 'Falha desconhecida'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Erro de conexão ao excluir: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  }
+}
+window.deleteSkill = deleteSkill;
 
 // 4. Global Victoria Copilot Drawer
 function toggleCopilotDrawer(forceState) {

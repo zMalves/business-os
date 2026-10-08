@@ -236,47 +236,114 @@ export class SkillService {
   /**
    * Executa um Dry-Run (teste simulado) de uma skill sem ativá-la em produção
    */
-  async dryRunSkill(skillData: DynamicSkillInput, sampleArgs: Record<string, any> = {}) {
+  async dryRunSkill(skillData: DynamicSkillInput, sampleArgs: Record<string, any> = {}, skillId?: string) {
     const startTime = Date.now();
     const workflow = skillData.workflow || [];
     const executionContext: { input: Record<string, any>; steps: Record<string, any> } = {
       input: { ...sampleArgs },
       steps: {},
     };
+    const stepLogs: Array<{
+      stepId: string;
+      title?: string;
+      type: string;
+      toolName?: string;
+      success: boolean;
+      output?: any;
+      error?: string;
+    }> = [];
+
+    let overallSuccess = true;
+    let errorMessage: string | undefined = undefined;
 
     for (const step of workflow) {
       const stepId = step.id || `step_${Object.keys(executionContext.steps).length + 1}`;
-      if (step.type === 'tool_call' && step.toolName) {
-        const resolvedArgs = interpolateVariables(step.args || {}, executionContext);
-        const toolResult = await executeTool(step.toolName, resolvedArgs);
-        executionContext.steps[step.outputKey || stepId] = toolResult;
-      } else if (step.type === 'format_template') {
-        const resolvedText = interpolateVariables(step.template || '', executionContext);
-        executionContext.steps[step.outputKey || stepId] = resolvedText;
+      try {
+        if (step.type === 'tool_call' && step.toolName) {
+          const resolvedArgs = interpolateVariables(step.args || {}, executionContext);
+          let toolResult: any;
+
+          // Se for ferramenta externa com efeito colateral em mensageria, simula o envio no Dry-Run
+          if (step.toolName === 'send_whatsapp_message' || step.toolName === 'whatsapp_send_message') {
+            toolResult = {
+              simulated: true,
+              message: `[DRY-RUN SIMULADO] Mensagem para ${resolvedArgs.phone || 'destinatário'}: "${resolvedArgs.message || resolvedArgs.text || ''}"`,
+            };
+          } else {
+            toolResult = await executeTool(step.toolName, resolvedArgs);
+          }
+
+          executionContext.steps[step.outputKey || stepId] = toolResult;
+          stepLogs.push({
+            stepId,
+            title: step.title || step.toolName,
+            type: step.type,
+            toolName: step.toolName,
+            success: true,
+            output: toolResult,
+          });
+        } else if (step.type === 'format_template') {
+          const resolvedText = interpolateVariables(step.template || '', executionContext);
+          executionContext.steps[step.outputKey || stepId] = resolvedText;
+          stepLogs.push({
+            stepId,
+            title: step.title || 'Formatação de Template',
+            type: step.type,
+            success: true,
+            output: resolvedText,
+          });
+        }
+      } catch (err: any) {
+        overallSuccess = false;
+        errorMessage = err.message || 'Erro durante execução da etapa';
+        stepLogs.push({
+          stepId,
+          title: step.title || step.toolName,
+          type: step.type,
+          toolName: step.toolName,
+          success: false,
+          error: errorMessage,
+        });
+        break;
       }
     }
 
     const durationMs = Date.now() - startTime;
-    return {
-      success: true,
+    const result = {
+      success: overallSuccess,
       dryRun: true,
       skillName: skillData.name,
       displayName: skillData.displayName,
       durationMs,
       steps: executionContext.steps,
+      logs: stepLogs,
+      error: errorMessage,
     };
+
+    if (skillId) {
+      try {
+        await prisma.dynamicSkill.update({
+          where: { id: skillId },
+          data: { testResult: result as any },
+        });
+      } catch (err: any) {
+        loggerService.warn('system', `[SkillService] Falha ao persistir testResult na skill ${skillId}: ${err?.message || err}`);
+      }
+    }
+
+    return result;
   }
 
   /**
    * Alterna status de ativação da skill
    */
-  async toggleSkillStatus(id: string, isActive?: boolean) {
-    const skill = await prisma.dynamicSkill.findUnique({ where: { id } });
-    if (!skill) throw new Error(`Skill ${id} não encontrada.`);
+  async toggleSkillStatus(nameOrId: string, isActive?: boolean) {
+    const skill = await this.getSkill(nameOrId);
+    if (!skill) throw new Error(`Skill "${nameOrId}" não encontrada.`);
 
     const newStatus = isActive !== undefined ? isActive : !skill.isActive;
     return prisma.dynamicSkill.update({
-      where: { id },
+      where: { id: skill.id },
       data: { isActive: newStatus, isDraft: false },
     });
   }
@@ -284,9 +351,12 @@ export class SkillService {
   /**
    * Remove uma skill do catálogo
    */
-  async deleteSkill(id: string) {
+  async deleteSkill(nameOrId: string) {
+    const skill = await this.getSkill(nameOrId);
+    if (!skill) throw new Error(`Skill "${nameOrId}" não encontrada.`);
+
     return prisma.dynamicSkill.delete({
-      where: { id },
+      where: { id: skill.id },
     });
   }
 

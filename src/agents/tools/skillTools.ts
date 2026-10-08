@@ -214,7 +214,8 @@ export async function executeSkillTool(name: string, args: Record<string, any>):
           workflow: skill.workflow as any,
           parametersSchema: skill.parametersSchema as any,
         },
-        args.sampleArgs || {}
+        args.sampleArgs || {},
+        skill.id
       );
 
       return {

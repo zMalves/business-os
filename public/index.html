@@ -1012,6 +1012,33 @@
     </div>
   </div>
 
+  <!-- Modal: Resultado de Simulação (Dry-Run) de Skill -->
+  <div class="modal-backdrop" id="modal-skill-dry-run">
+    <div class="modal-card" style="max-width: 680px; width: 95vw; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(0, 70, 67, 0.1); color: var(--color-cyprus); width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="fa-solid fa-flask"></i>
+          </div>
+          <div>
+            <h3 id="modal-dry-run-title" style="margin: 0; font-size: 1.15rem; color: var(--color-cyprus);">Simulação de Skill (Dry-Run)</h3>
+            <small id="modal-dry-run-subtitle" style="color: var(--text-dim);">Resultado do teste simulado do fluxo</small>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-skill-dry-run')">&times;</button>
+      </div>
+
+      <div id="modal-dry-run-body" style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+        <!-- Preenchido dinamicamente via JS -->
+      </div>
+
+      <div class="modal-footer" style="padding: 12px 20px; border-top: 1px solid var(--border-color); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+        <span id="modal-dry-run-time" style="font-size: 0.8rem; color: var(--text-dim); font-family: var(--font-mono);"></span>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-skill-dry-run')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Nova Memória -->
   <div class="modal-backdrop" id="modal-memory">
     <div class="modal-card">

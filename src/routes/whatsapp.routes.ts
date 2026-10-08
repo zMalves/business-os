@@ -252,7 +252,9 @@ export async function whatsappRoutes(app: FastifyInstance) {
 
         loggerService.agent(`🤖 Processando mensagem com a Victoria: "${text || '(Foto sem legenda)'}" (de ${contactName} - ${roleLabel})`);
 
-        const briefingInfo = authContact.briefing ? ` | Briefing/Quem é: "${authContact.briefing}"` : (authContact.notes ? ` | Nota: "${authContact.notes}"` : '');
+        const briefingText = (authContact as any).briefing;
+        const notesText = (authContact as any).notes;
+        const briefingInfo = briefingText ? ` | Briefing/Quem é: "${briefingText}"` : (notesText ? ` | Nota: "${notesText}"` : '');
         const senderTag = `${contactName} (Cargo: ${roleLabel}${briefingInfo})`;
         let promptWithSender = `[${senderTag}]: ${text}`;
         if (isAudio) {

@@ -57,7 +57,7 @@ export async function skillRoutes(app: FastifyInstance) {
   /**
    * Executar teste simulado (Dry-run) de uma skill
    */
-  app.post('/skills/:id/test', async (req, reply) => {
+  const handleDryRun = async (req: any, reply: any) => {
     const { id } = req.params as { id: string };
     try {
       const skill = await skillService.getSkill(id);
@@ -74,14 +74,18 @@ export async function skillRoutes(app: FastifyInstance) {
           workflow: skill.workflow as any,
           parametersSchema: skill.parametersSchema as any,
         },
-        body.sampleArgs || {}
+        body.sampleArgs || {},
+        skill.id
       );
 
       return reply.send({ success: true, result });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });
     }
-  });
+  };
+
+  app.post('/skills/:id/test', handleDryRun);
+  app.post('/skills/:id/dry-run', handleDryRun);
 
   /**
    * Executar uma skill em produção
