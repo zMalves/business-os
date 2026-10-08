@@ -3351,6 +3351,23 @@ async function deleteSkill(id, displayName) {
 }
 window.deleteSkill = deleteSkill;
 
+async function syncDefaultSkills() {
+  try {
+    showToast('Sincronizando Hub de Skills com o banco...', 'info');
+    const res = await fetch('/api/skills/seed', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`${data.count} habilidades operacionais sincronizadas com sucesso!`, 'success');
+      await fetchSkillsCatalog();
+    } else {
+      showToast(`Erro ao sincronizar: ${data.error || 'Falha'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Erro de conexão: ${err.message}`, 'error');
+  }
+}
+window.syncDefaultSkills = syncDefaultSkills;
+
 // 4. Global Victoria Copilot Drawer
 function toggleCopilotDrawer(forceState) {
   const drawer = document.getElementById('copilot-drawer');

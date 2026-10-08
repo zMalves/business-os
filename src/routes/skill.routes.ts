@@ -8,10 +8,23 @@ export async function skillRoutes(app: FastifyInstance) {
   app.get('/skills', async (req, reply) => {
     try {
       let skills = await skillService.listAllSkills();
-      if (skills.length === 0) {
+      if (skills.length < 17) {
         await skillService.seedDefaultSkills();
         skills = await skillService.listAllSkills();
       }
+      return reply.send({ success: true, count: skills.length, skills });
+    } catch (error: any) {
+      return reply.status(500).send({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * Semear / atualizar catálogo de skills padrão
+   */
+  app.post('/skills/seed', async (req, reply) => {
+    try {
+      await skillService.seedDefaultSkills();
+      const skills = await skillService.listAllSkills();
       return reply.send({ success: true, count: skills.length, skills });
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });

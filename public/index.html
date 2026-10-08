@@ -330,7 +330,10 @@
 
       <!-- TAB: Dynamic Skills -->
       <section class="tab-panel" id="tab-skills">
-        <div class="panel-header-actions" style="justify-content: flex-end; margin-bottom: 16px;">
+        <div class="panel-header-actions" style="justify-content: flex-end; gap: 8px; margin-bottom: 16px;">
+          <button class="btn btn-secondary btn-sm" onclick="syncDefaultSkills()">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Sincronizar Hub de Skills
+          </button>
           <button class="btn btn-secondary btn-sm" onclick="fetchSkillsCatalog()">
             <i class="fa-solid fa-arrows-rotate"></i> Atualizar Skills
           </button>
